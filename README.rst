@@ -10,8 +10,10 @@ of the plaintext files.
 
 The most common scenario is:
 
-                       syncrypto                         syncrypto
-plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
+::
+                           syncrypto                         syncrypto
+    plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
+
 
 The files in encrypted folder B are encrypted, so you can store it in any unsafe
 environment, such as Cloud service(Dropbox/OneDrive), USB storage or any other
