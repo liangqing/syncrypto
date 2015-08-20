@@ -661,18 +661,18 @@ non_empty_folder2/in/sub/folder/file: test 2
                           "non_empty_folder2/in/sub/folder")
         self.checkResultAfterSync()
 
-    def testChangePassword(self):
-        self.clearFolders()
-        prepare_filetree(self.plain_folder, '''
-file_reserve: test
-folder/reserve: LOL
-empty_folder1/
-empty_folder2/in/sub/folder/
-non_empty_folder1/file: test 1
-non_empty_folder2/in/sub/folder/file: test 2
-        ''')
-        syncrypto_cmd(["--password", self.password,
-                       "--change-password", self.encrypted_folder])
+#     def testChangePassword(self):
+#         self.clearFolders()
+#         prepare_filetree(self.plain_folder, '''
+# file_reserve: test
+# folder/reserve: LOL
+# empty_folder1/
+# empty_folder2/in/sub/folder/
+# non_empty_folder1/file: test 1
+# non_empty_folder2/in/sub/folder/file: test 2
+#         ''')
+#         syncrypto_cmd(["--password", self.password,
+#                        "--change-password", self.encrypted_folder])
 
 if __name__ == '__main__':
     unittest.main()
