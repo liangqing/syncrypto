@@ -27,7 +27,8 @@ Usage
 
     syncrypto [encrypted folder] [plaintext folder]
 
-this command will prompt you to input a password, if the encrypted folder is empty, the input password will set to the folder, or it will be used to verify the password.
+it will prompt you to input a password, if the encrypted folder is empty, 
+the input password will be set to the encrypted folder, or it will be used to verify the password you set before.
 
 
 
@@ -37,4 +38,4 @@ this command will prompt you to input a password, if the encrypted folder is emp
 
     syncrypto --change-password [encrypted folder]
 
-this command will change the password of the encrypted folder
+change the password of the encrypted folder
