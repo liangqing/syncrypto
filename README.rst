@@ -11,6 +11,7 @@ of the plaintext files.
 The most common scenario is\:
 
 .. code::
+
                            syncrypto                         syncrypto
     plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
 
