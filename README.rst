@@ -39,3 +39,9 @@ the input password will be set to the encrypted folder, or it will be used to ve
     syncrypto --change-password [encrypted folder]
 
 change the password of the encrypted folder
+
+3) Show the help
+
+.. code-block:: bash
+
+    syncrypto -h
