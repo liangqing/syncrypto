@@ -9,11 +9,9 @@ use it to encrypt a folder to another folder which contains the encrypted files
 of the plaintext files.
 
 The most common scenario is:
-
-::
+.. code::
                            syncrypto                         syncrypto
     plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
-
 
 The files in encrypted folder B are encrypted, so you can store it in any unsafe
 environment, such as Cloud service(Dropbox/OneDrive), USB storage or any other
