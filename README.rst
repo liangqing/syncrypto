@@ -1,4 +1,4 @@
-Sync folders in encrypted way
+Synchronize folders in encrypted way
 =============================
 
 Introduction
