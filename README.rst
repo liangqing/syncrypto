@@ -1,14 +1,30 @@
-Synchronize folders in encrypted way
-=============================
+Synchronize plaintext folder with its encrypted content
+=======================================================
 
 Introduction
 ------------
 
-"syncrypto" synchronizes plaintext files within a folder to another folder which contains encrypted contents of the files.
+"syncrypto" synchronizes plaintext folder with its encrypted content, so you can
+use it to encrypt a folder to another folder which contains the encrypted files
+of the plaintext files.
 
-Each plaintext file has a correspondent encrypted file in the encrypted folder.
+The most common scenario is:
 
-The synchronization is bidirectional, every time you synchronize two folders(one is plaintext folder, another is encrypted folder) with "syncrypto", you will get the same result in the two folders finally.
+                       syncrypto                         syncrypto
+plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
+
+The files in encrypted folder B are encrypted, so you can store it in any unsafe
+environment, such as Cloud service(Dropbox/OneDrive), USB storage or any other
+storage that you can not controlled.
+
+Each plaintext file has a corresponding encrypted file in the encrypted folder,
+so if you modify one file in plaintext folder, there will only one file will be
+modified in the encrypted folder. This make sure that you only need change
+minimal files in encrypted folder.
+
+The synchronization is bidirectional, every time you synchronize two folders
+(one is plaintext folder, another is encrypted folder) with "syncrypto",
+you will get the same result in the two folders finally.
 
 Installation
 ------------
@@ -28,7 +44,8 @@ Usage
     syncrypto [encrypted folder] [plaintext folder]
 
 it will prompt you to input a password, if the encrypted folder is empty, 
-the input password will be set to the encrypted folder, or it will be used to verify the password you set before.
+the input password will be set to the encrypted folder, or it will be used
+to verify the password you set before.
 
 
 
@@ -45,3 +62,9 @@ change the password of the encrypted folder
 .. code-block:: bash
 
     syncrypto -h
+
+
+License
+-------
+
+Apache License

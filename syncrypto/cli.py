@@ -4,7 +4,7 @@
 import argparse
 
 parser = argparse.ArgumentParser(
-    description='Sync files between folders in encrypted way'
+    description='Synchronize plaintext folder with its encrypted content'
 )
 
 parser.add_argument(
