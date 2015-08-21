@@ -21,8 +21,8 @@ storage that you can not controlled.
 
 Each plaintext file has a corresponding encrypted file in the encrypted folder,
 so if you modify one file in plaintext folder, there will be only one file be
-modified in the encrypted folder. This make sure changes the minimal files in 
-encrypted folder.
+modified in the encrypted folder. This make sure the synchronization changes the
+minimal files in encrypted folder.
 
 The synchronization is bidirectional, every time you synchronize two folders
 (one is plaintext folder, another is encrypted folder) with "syncrypto",
