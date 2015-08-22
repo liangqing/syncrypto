@@ -12,7 +12,7 @@ from time import sleep
 from getpass import getpass
 from stat import *
 from crypto import Crypto, UnrecognizedContent
-from filetree import FileTree
+from filetree import FileTree, FileRuleSet
 from cStringIO import StringIO
 
 
@@ -39,18 +39,27 @@ class Syncrypto:
         self.rule_set = rule_set
 
         if not os.path.isdir(self.encrypted_folder):
-            raise Exception("encrypted folder path is not directory: " +
+            raise Exception("encrypted folder path is not correct: " +
                             self.encrypted_folder)
 
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
-                raise Exception("plain folder path is not directory: " +
+                raise Exception("plaintext folder path is not correct: " +
                                 self.plain_folder)
             if self.snapshot_tree is None:
                 self._load_snapshot_tree()
 
             if self.plain_tree is None:
                 self._load_plain_tree()
+
+            if self.rule_set is None:
+                self.rule_set = FileRuleSet()
+
+            rule_path = self._rule_path()
+
+            if os.path.exists(rule_path):
+                for line in open(rule_path).read().split("\n"):
+                    self.rule_set.add_rule_by_string(line)
 
         if self.encrypted_tree is None:
             self._load_encrypted_tree()
@@ -130,10 +139,16 @@ class Syncrypto:
         os.chmod(plain_path, encrypted_file.mode)
         os.utime(plain_path, (mtime, mtime))
 
+    def _is_ignore(self, plain_file, encrypted_file):
+        return (self.rule_set.test(plain_file) != 'include' and
+                self.rule_set.test(encrypted_file) != 'include')
+
     def _sync_file(self, pathname):
         plain_file = self.plain_tree.get(pathname)
         encrypted_file = self.encrypted_tree.get(pathname)
         snapshot_file = self.snapshot_tree.get(pathname)
+        if self._is_ignore(plain_file, encrypted_file):
+            return "exclude", None
         if plain_file is not None and encrypted_file is not None:
             if plain_file.mtime > encrypted_file.mtime:
                 self._encrypt_file(pathname)
@@ -186,12 +201,18 @@ class Syncrypto:
         self._ensure_dir(path)
         return path
 
+    def _rule_path(self):
+        return self._plain_folder_path("rules")
+
     def _snapshot_tree_path(self):
         md5 = hashlib.md5(self.encrypted_folder).hexdigest()
+        return self._plain_folder_path(md5+'.filetree')
+
+    def _plain_folder_path(self, sub_file):
         filename = ".syncrypto"
         if os.name == 'nt':
             filename = "_syncrypto"
-        path = os.path.join(self.plain_folder, filename, md5+'.filetree')
+        path = os.path.join(self.plain_folder, filename, sub_file)
         self._ensure_dir(path)
         return path
 
@@ -257,7 +278,8 @@ class Syncrypto:
         results = []
         for pathname in pathnames:
             action, file_entry = self._sync_file(pathname)
-            new_snapshot_tree.set(pathname, file_entry)
+            if file_entry is not None:
+                new_snapshot_tree.set(pathname, file_entry)
             results.append((action, file_entry))
         self.snapshot_tree = new_snapshot_tree
         self._save_trees()
@@ -306,12 +328,19 @@ def main(args=sys.argv[1:]):
 
     password = args.password
 
+    rule_set = FileRuleSet()
+
+    if args.rule is not None:
+        for rule_string in args.rule:
+            rule_set.add_rule_by_string(rule_string)
+
     if not password:
         password = getpass('please input the password:')
 
     crypto = Crypto(password)
 
-    syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder)
+    syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder,
+                          rule_set=rule_set)
 
     if args.change_password:
         newpass1 = None

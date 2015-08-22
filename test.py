@@ -231,6 +231,21 @@ class FileRuleSetTestCase(unittest.TestCase):
         self.assertEqual(f.op, "gt")
         self.assertEqual(f.value, 1024)
 
+    def testDefaultAction(self):
+        rule_set = FileRuleSet()
+        rule_set.add_rule_by_string("exclude: size > 1024000")
+        self.assertEqual(rule_set.test(self.file_entry), rule_set.default_action)
+        rule_set = FileRuleSet(default_action="hahaha")
+        rule_set.add_rule_by_string("exclude: size > 1024000")
+        self.assertEqual(rule_set.test(self.file_entry), "hahaha")
+
+    def testMatchPattern(self):
+        f = FileRuleSet.parse("exclude: name match *_not_sync")
+        self.assertEqual(f.action, "exclude")
+        self.assertEqual(f.attr, "name")
+        self.assertEqual(f.op, "match")
+        self.assertEqual(f.value, "*_not_sync")
+
 
 class FileTreeTestCase(unittest.TestCase):
 
@@ -660,6 +675,23 @@ non_empty_folder2/in/sub/folder/file: test 2
         self.deleteFolder(self.plain_folder_check,
                           "non_empty_folder2/in/sub/folder")
         self.checkResultAfterSync()
+
+    def testRuleSet(self):
+        self.clearFolders()
+        prepare_filetree(self.plain_folder, '''
+filename_sync: 1
+filename_not_sync: 2
+        ''')
+        syncrypto_cmd(["--password", self.password,
+                       "--rule", "exclude: name match *_not_sync",
+                       self.encrypted_folder, self.plain_folder])
+        syncrypto_cmd(["--password", self.password,
+                       self.encrypted_folder, self.plain_folder_check])
+        dcmp = dircmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(dcmp.left_only, ["filename_not_sync"])
+        self.assertEqual(len(dcmp.right_only), 0)
+        self.assertEqual(len(dcmp.diff_files), 0)
+
 
 #     def testChangePassword(self):
 #         self.clearFolders()

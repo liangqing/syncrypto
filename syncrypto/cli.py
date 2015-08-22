@@ -50,13 +50,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--include',
+    '--rule',
     action="append",
-    help='include the file or directory match it'
-)
-
-parser.add_argument(
-    '--exclude',
-    action="append",
-    help='exclude the file or directory match it'
+    help='Add file include or exclude rule'
 )

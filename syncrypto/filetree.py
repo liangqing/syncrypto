@@ -127,6 +127,8 @@ class FileRule:
         self.action = action
 
     def test(self, file_entry):
+        if file_entry is None:
+            return None
         attr = self.attr
         if attr == 'name' or attr == 'path':
             attr = 'pathname'
@@ -185,10 +187,12 @@ class FileRuleSet:
         r"\s*(\w+)\s+(\S+)\s+(\".+\"|'.+'|.+)\s*")
 
     _RULE_STRING_REGEXP_WITH_ACTION = re.compile(
-        r"\s*(\w+)\s*:\s*(\w+)\s+(\S+)\s+(\".+\"|'.+'|.+)\s*")
+        r"\s*(include|exclude|ignore)\s*:\s*(\w+)\s+(\S+)\s+(\".+\"|'.+'|.+)\s*"
+    )
 
-    def __init__(self):
+    def __init__(self, default_action="include"):
         self._rules = []
+        self.default_action = default_action
 
     def add(self, attr, op, value, action):
         self._rules.append(FileRule(attr, op, value, action))
@@ -204,7 +208,7 @@ class FileRuleSet:
             action = rule.test(file_entry)
             if action is not None:
                 return action
-        return None
+        return self.default_action
 
     @classmethod
     def parse(cls, rule_string, action=None):

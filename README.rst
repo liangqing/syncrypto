@@ -3,8 +3,8 @@ Synchronize plaintext folder with its encrypted content
 
 Introduction
 ------------
-You can use "syncrypto" to encrypt a folder to another folder which contains the encrypted files
-of the plaintext files.
+You can use "syncrypto" to encrypt a folder to another folder which contains the
+corresponding encrypted content of the files within former.
 
 The most common scenario is\:
 
@@ -57,7 +57,28 @@ to verify the password you set before.
 
 change the password of the encrypted folder
 
-3) Show the help
+3) Add rule for Synchronization
+
+If you want ignore files in the plaintext folder, you can add rule to do that,
+such as\:
+
+.. code-block:: bash
+
+    syncrypto --rule "ignore: name match *.swp"
+
+the command above ignores files which name match *.swp
+
+You can add rules multiple times\:
+
+.. code-block:: bash
+
+    syncrypto --rule "include: name eq README.md" --rule "ignore: name match *.md"
+
+the command above ignores files match "*.md" but include "README.md"
+the rules are ordered, it means that the rules in front have high priority than
+later.
+
+4) Show the help
 
 .. code-block:: bash
 
