@@ -74,7 +74,7 @@ You can add rules multiple times\:
 
     syncrypto --rule "include: name eq README.md" --rule "ignore: name match *.md"
 
-the command above ignores files matching "*.md" but include "README.md",
+the command above ignores files matching "*.md" but includes files named "README.md",
 the rules are ordered, it means that the rules in front have high priority than
 later.
 
