@@ -59,14 +59,14 @@ change the password of the encrypted folder
 
 3) Add rule for Synchronization
 
-If you want ignore files in the plaintext folder, you can add rule to do that,
+If you want ignore files while synchronizing, you can add rule to do that,
 such as\:
 
 .. code-block:: bash
 
     syncrypto --rule "ignore: name match *.swp"
 
-the command above ignores files which name match *.swp
+the command above ignores files which name matches *.swp
 
 You can add rules multiple times\:
 
@@ -74,7 +74,7 @@ You can add rules multiple times\:
 
     syncrypto --rule "include: name eq README.md" --rule "ignore: name match *.md"
 
-the command above ignores files match "*.md" but include "README.md"
+the command above ignores files matching "*.md" but include "README.md",
 the rules are ordered, it means that the rules in front have high priority than
 later.
 
