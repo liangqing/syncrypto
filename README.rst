@@ -1,5 +1,5 @@
-Synchronize plaintext folder with its encrypted content
-=======================================================
+Synchronize a folder with its encrypted content
+===============================================
 
 Introduction
 ------------
@@ -76,7 +76,30 @@ You can add rules multiple times\:
 
 the command above ignores files matching "*.md" but includes files named "README.md",
 the rules are ordered, it means that the rules in front have high priority than
-later.
+later. If a rule matches, then matching process will returned immediately.
+
+You can add rules in a file which looks like\:
+
+.. code-block::
+
+    include: name eq README.md
+
+    # ignore all markdown files, this is a comment
+    ignore: name match *.md
+
+and use the rules by --rule-file:
+
+.. code-block:: bash
+
+    syncrypto --rule-file [rule file path]
+
+the default rule file path is [plaintext folder]/.syncrypto/rules, so you can
+add rules in "[plaintext folder]/.syncrypto/rules", but don't need specify the
+--rule-file option explicitly.
+
+If you give some rules in command line, and write some rules in rule file at
+the same time, the rules in command line will have higher priority than rules
+in file.
 
 4) Show the help
 

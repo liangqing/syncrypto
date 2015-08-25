@@ -28,7 +28,7 @@ class Syncrypto:
 
     def __init__(self, crypto, encrypted_folder, plain_folder=None,
                  encrypted_tree=None, plain_tree=None, snapshot_tree=None,
-                 rule_set=None):
+                 rule_set=None, rule_file=None):
 
         self.crypto = crypto
         self.encrypted_folder = encrypted_folder
@@ -55,10 +55,14 @@ class Syncrypto:
             if self.rule_set is None:
                 self.rule_set = FileRuleSet()
 
-            rule_path = self._rule_path()
+            if rule_file is None:
+                rule_file = self._rule_path()
 
-            if os.path.exists(rule_path):
-                for line in open(rule_path).read().split("\n"):
+            if os.path.exists(rule_file):
+                for line in open(rule_file).read().split("\n"):
+                    line = line.strip()
+                    if line == "" or line[0] == '#':
+                        continue
                     self.rule_set.add_rule_by_string(line)
 
         if self.encrypted_tree is None:

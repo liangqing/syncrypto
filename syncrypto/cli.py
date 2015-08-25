@@ -50,6 +50,11 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '--rule-file',
+    help='Specify the rule file, default is [plaintext folder]/.syncrypto/rules'
+)
+
+parser.add_argument(
     '--rule',
     action="append",
     help='Add file include or exclude rule'
