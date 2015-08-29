@@ -7,6 +7,7 @@ from Crypto import Random
 import os
 import os.path
 import shutil
+from subprocess import call
 from tempfile import mkstemp, mkdtemp
 from syncrypto import File, FileRule, FileRuleSet, FileTree, Crypto, Syncrypto
 from syncrypto import cmd as syncrypto_cmd
@@ -625,9 +626,12 @@ delete_me: delete me!
 file/in/sub/folder/delete_me: oh, please delete me!
         ''')
         self.checkResultAfterSync()
+        call(["find", self.encrypted_folder])
         self.deleteFile(self.plain_folder, "delete_me")
         self.deleteFile(self.plain_folder, "file/in/sub/folder/delete_me")
         self.checkResultAfterSync()
+        print "=="
+        call(["find", self.encrypted_folder])
 
     def testDeleteFileInCheckFolder(self):
         self.clearFolders()
