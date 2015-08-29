@@ -59,7 +59,7 @@ class Syncrypto:
                 rule_file = self._rule_path()
 
             if os.path.exists(rule_file):
-                for line in open(rule_file).read().split("\n"):
+                for line in open(rule_file):
                     line = line.strip()
                     if line == "" or line[0] == '#':
                         continue
@@ -344,7 +344,7 @@ def main(args=sys.argv[1:]):
     crypto = Crypto(password)
 
     syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder,
-                          rule_set=rule_set)
+                          rule_set=rule_set, rule_file=args.rule_file)
 
     if args.change_password:
         newpass1 = None

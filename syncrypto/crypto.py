@@ -45,6 +45,21 @@ class Crypto:
         self.key_size = key_size
         self.block_size = AES.block_size
 
+    def encrypt_file(self, plain_path, encrypted_path, plain_file):
+        plain_fd = open(plain_path, 'rb')
+        encrypted_fd = open(encrypted_path, 'wb')
+        self.encrypt_fd(plain_fd, encrypted_fd, plain_file)
+        plain_fd.close()
+        encrypted_fd.close()
+
+    def decrypt_file(self, encrypted_path, plain_path):
+        plain_fd = open(plain_path, 'wb')
+        encrypted_fd = open(encrypted_path, 'rb')
+        file_entry = self.decrypt_fd(encrypted_fd, plain_fd)
+        plain_fd.close()
+        encrypted_fd.close()
+        return file_entry
+
     @staticmethod
     def compress_fd(in_fd, out_fd):
         out_fd.write(zlib.compress(in_fd.read()))
@@ -88,21 +103,6 @@ class Crypto:
         (size, ctime, mtime, mode) = unpack('!QIIi', header[16:36])
         return File(header[36:header_size], size, ctime, mtime, mode,
                     header[:16], False)
-
-    def encrypt_file(self, plain_path, encrypted_path, plain_file):
-        plain_fd = open(plain_path, 'rb')
-        encrypted_fd = open(encrypted_path, 'wb')
-        self.encrypt_fd(plain_fd, encrypted_fd, plain_file)
-        plain_fd.close()
-        encrypted_fd.close()
-
-    def decrypt_file(self, encrypted_path, plain_path):
-        plain_fd = open(plain_path, 'wb')
-        encrypted_fd = open(encrypted_path, 'rb')
-        file_entry = self.decrypt_fd(encrypted_fd, plain_fd)
-        plain_fd.close()
-        encrypted_fd.close()
-        return file_entry
 
     def encrypt_fd(self, in_fd, out_fd, file_entry, flags=0):
         """

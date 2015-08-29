@@ -74,9 +74,10 @@ You can add rules multiple times\:
 
     syncrypto --rule "include: name eq README.md" --rule "ignore: name match *.md"
 
-the command above ignores files matching "*.md" but includes files named "README.md",
-the rules are ordered, it means that the rules in front have high priority than
-later. If a rule matches, then matching process will returned immediately.
+the command above ignores files matching "*.md" but includes files named "README.md".
+
+The rules are ordered, it means that the rules in front have higher priority than
+later, if a rule matches, the matching process will returned immediately.
 
 You can add rules in a file which looks like\:
 
@@ -87,15 +88,15 @@ You can add rules in a file which looks like\:
     # ignore all markdown files, this is a comment
     ignore: name match *.md
 
-and use the rules by --rule-file:
+and use the rules by "--rule-file" option:
 
 .. code-block:: bash
 
     syncrypto --rule-file [rule file path]
 
-the default rule file path is [plaintext folder]/.syncrypto/rules, so you can
+the default rule file path is "[plaintext folder]/.syncrypto/rules", so you can
 add rules in "[plaintext folder]/.syncrypto/rules", but don't need specify the
---rule-file option explicitly.
+"--rule-file" option explicitly.
 
 If you give some rules in command line, and write some rules in rule file at
 the same time, the rules in command line will have higher priority than rules
