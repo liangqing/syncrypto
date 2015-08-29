@@ -631,6 +631,7 @@ file/in/sub/folder/delete_me: oh, please delete me!
         self.checkResultAfterSync()
         self.deleteFile(self.plain_folder, "delete_me")
         self.deleteFile(self.plain_folder, "file/in/sub/folder/delete_me")
+        print "look start here!"
         self.checkResultAfterSync()
 
     def testDeleteFileInCheckFolder(self):
