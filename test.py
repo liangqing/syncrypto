@@ -7,7 +7,6 @@ from Crypto import Random
 import os
 import os.path
 import shutil
-from subprocess import call
 from tempfile import mkstemp, mkdtemp
 from syncrypto import File, FileRule, FileRuleSet, FileTree, Crypto, Syncrypto
 from syncrypto import cmd as syncrypto_cmd
@@ -452,11 +451,11 @@ class CmdTestCase(unittest.TestCase):
 
     def checkResultAfterSync(self):
         print ">>>> first"
-        call(["find", self.encrypted_folder])
+        print os.listdir(self.encrypted_folder)
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder])
         print ">>>> second"
-        call(["find", self.encrypted_folder])
+        print os.listdir(self.encrypted_folder)
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder_check])
 
