@@ -156,10 +156,10 @@ class Syncrypto:
         if plain_file is not None and encrypted_file is not None:
             if plain_file.mtime > encrypted_file.mtime:
                 self._encrypt_file(pathname)
-                return "decrypted", plain_file
+                return "encrypted", plain_file
             elif plain_file.mtime < encrypted_file.mtime:
                 self._decrypt_file(pathname)
-                return "encrypted", encrypted_file
+                return "decrypted", encrypted_file
         elif plain_file is not None:
             # encrypted_tree.is_new or \
             if snapshot_file is None or snapshot_file.mtime < plain_file.mtime:
@@ -282,10 +282,10 @@ class Syncrypto:
         results = []
         for pathname in pathnames:
             action, file_entry = self._sync_file(pathname)
+            print pathname, action
             if file_entry is not None:
                 new_snapshot_tree.set(pathname, file_entry)
             results.append((action, file_entry))
-        print results
         self.snapshot_tree = new_snapshot_tree
         self._save_trees()
         return results
