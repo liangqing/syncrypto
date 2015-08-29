@@ -451,8 +451,12 @@ class CmdTestCase(unittest.TestCase):
         self.assertEqual(len(dcmp.diff_files), 0)
 
     def checkResultAfterSync(self):
+        print ">>>> first"
+        call(["find", self.encrypted_folder])
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder])
+        print ">>>> second"
+        call(["find", self.encrypted_folder])
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder_check])
 
@@ -628,7 +632,6 @@ file/in/sub/folder/delete_me: oh, please delete me!
         self.checkResultAfterSync()
         self.deleteFile(self.plain_folder, "delete_me")
         self.deleteFile(self.plain_folder, "file/in/sub/folder/delete_me")
-        call(["find", self.encrypted_folder])
         self.checkResultAfterSync()
 
     def testDeleteFileInCheckFolder(self):
