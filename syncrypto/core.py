@@ -280,6 +280,8 @@ class Syncrypto:
                         pathnames())
         new_snapshot_tree = FileTree()
         results = []
+        print self.encrypted_tree
+        print self.plain_tree
         for pathname in pathnames:
             action, file_entry = self._sync_file(pathname)
             print pathname, action
