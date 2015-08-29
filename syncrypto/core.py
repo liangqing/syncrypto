@@ -285,6 +285,7 @@ class Syncrypto:
             if file_entry is not None:
                 new_snapshot_tree.set(pathname, file_entry)
             results.append((action, file_entry))
+        print results
         self.snapshot_tree = new_snapshot_tree
         self._save_trees()
         return results
