@@ -626,12 +626,10 @@ delete_me: delete me!
 file/in/sub/folder/delete_me: oh, please delete me!
         ''')
         self.checkResultAfterSync()
-        call(["find", self.encrypted_folder])
         self.deleteFile(self.plain_folder, "delete_me")
         self.deleteFile(self.plain_folder, "file/in/sub/folder/delete_me")
-        self.checkResultAfterSync()
-        print "=="
         call(["find", self.encrypted_folder])
+        self.checkResultAfterSync()
 
     def testDeleteFileInCheckFolder(self):
         self.clearFolders()
