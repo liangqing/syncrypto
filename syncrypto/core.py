@@ -288,7 +288,9 @@ class Syncrypto:
         encrypted_remove_list = []
         plain_remove_list = []
         self.debug("Start syncing")
+        self.debug("encrypted_tree:")
         self.debug(self.encrypted_tree)
+        self.debug("plain_tree:")
         self.debug(self.plain_tree)
         for pathname in pathnames:
             action, encrypted_file, plain_file = self._sync_file(pathname)
@@ -307,7 +309,9 @@ class Syncrypto:
             self.encrypted_tree.remove(pathname)
         for pathname in plain_remove_list:
             self.plain_tree.remove(pathname)
+        self.debug("encrypted_tree:")
         self.debug(self.encrypted_tree)
+        self.debug("plain_tree:")
         self.debug(self.plain_tree)
         self.debug("Finish syncing")
         self.snapshot_tree = self.encrypted_tree
