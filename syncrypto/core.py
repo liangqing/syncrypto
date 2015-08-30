@@ -190,7 +190,7 @@ class Syncrypto:
                     return "remove encrypted file", None, None
             else:
                 return "decrypted", encrypted_file, self._decrypt_file(pathname)
-        return None, plain_file, encrypted_file
+        return None, encrypted_file, plain_file
 
     def _encrypted_trash_path(self):
         i = 0
