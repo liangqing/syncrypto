@@ -304,6 +304,8 @@ class Syncrypto:
         self.debug(self.encrypted_tree)
         self.debug("plain_tree:")
         self.debug(self.plain_tree)
+        self.debug("snapshot_tree:")
+        self.debug(self.snapshot_tree)
 
         for pathname in pathnames:
             encrypted_file = self.encrypted_tree.get(pathname)
