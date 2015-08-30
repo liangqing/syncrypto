@@ -28,7 +28,7 @@ class Syncrypto:
 
     def __init__(self, crypto, encrypted_folder, plain_folder=None,
                  encrypted_tree=None, plain_tree=None, snapshot_tree=None,
-                 rule_set=None, rule_file=None):
+                 rule_set=None, rule_file=None, debug=False):
 
         self.crypto = crypto
         self.encrypted_folder = encrypted_folder
@@ -37,6 +37,7 @@ class Syncrypto:
         self.plain_tree = plain_tree
         self.snapshot_tree = snapshot_tree
         self.rule_set = rule_set
+        self._debug = debug
 
         if not os.path.isdir(self.encrypted_folder):
             raise Exception("encrypted folder path is not correct: " +
@@ -67,6 +68,10 @@ class Syncrypto:
 
         if self.encrypted_tree is None:
             self._load_encrypted_tree()
+
+    def debug(self, message):
+        if self._debug:
+            print message
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
@@ -282,8 +287,12 @@ class Syncrypto:
         pathnames.sort()
         encrypted_remove_list = []
         plain_remove_list = []
+        self.debug("Start syncing")
+        self.debug(self.encrypted_tree)
+        self.debug(self.plain_tree)
         for pathname in pathnames:
             action, encrypted_file, plain_file = self._sync_file(pathname)
+            self.debug("%s: %s" % (pathname, action))
             if encrypted_file is None:
                 encrypted_remove_list.append(pathname)
             else:
@@ -298,6 +307,9 @@ class Syncrypto:
             self.encrypted_tree.remove(pathname)
         for pathname in plain_remove_list:
             self.plain_tree.remove(pathname)
+        self.debug(self.encrypted_tree)
+        self.debug(self.plain_tree)
+        self.debug("Finish syncing")
         self.snapshot_tree = self.encrypted_tree
         self._save_trees()
         return results
@@ -357,7 +369,8 @@ def main(args=sys.argv[1:]):
     crypto = Crypto(password)
 
     syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder,
-                          rule_set=rule_set, rule_file=args.rule_file)
+                          rule_set=rule_set, rule_file=args.rule_file,
+                          debug=True)
 
     if args.change_password:
         newpass1 = None

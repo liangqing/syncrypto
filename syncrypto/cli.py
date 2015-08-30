@@ -59,3 +59,9 @@ parser.add_argument(
     action="append",
     help='Add file include or exclude rule'
 )
+
+parser.add_argument(
+    '--debug',
+    action="store_true",
+    help='Debug mode'
+)
