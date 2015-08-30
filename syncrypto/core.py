@@ -374,7 +374,7 @@ def main(args=sys.argv[1:]):
 
     syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder,
                           rule_set=rule_set, rule_file=args.rule_file,
-                          debug=True)
+                          debug=args.debug)
 
     if args.change_password:
         newpass1 = None
