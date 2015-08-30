@@ -85,7 +85,7 @@ class FileTestCase(unittest.TestCase):
         self.assertEqual(self.file_object.isdir, False)
         self.assertEqual(self.file_object.digest, None)
         self.assertEqual(self.file_object.size, stat.st_size)
-        self.assertEqual(self.file_object.ctime, stat.st_ctime)
+        self.assertEqual(self.file_object.ctime, int(stat.st_ctime))
         self.assertEqual(self.file_object.mtime, stat.st_mtime)
         self.assertEqual(self.file_object.mode, stat.st_mode)
         self.assertEqual(self.file_object.pathname,
