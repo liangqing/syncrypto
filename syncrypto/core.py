@@ -75,7 +75,7 @@ class Syncrypto:
 
     @staticmethod
     def info(message):
-        print "[INFO]", message
+        print message
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
@@ -286,6 +286,12 @@ class Syncrypto:
                                                  target))
         tree.remove(pathname)
 
+    @staticmethod
+    def _revise_folder(tree, root):
+        for entry in tree.folders():
+            fs_path = entry.fs_path(root)
+            os.utime(fs_path, (entry.mtime, entry.mtime))
+
     def sync_folder(self):
         if self.plain_folder is None:
             raise Exception("please specify the plaintext folder to sync files")
@@ -333,6 +339,9 @@ class Syncrypto:
             self._delete_file(pathname, "encrypted folder")
         for pathname in plain_remove_list:
             self._delete_file(pathname, "plaintext folder")
+
+        self._revise_folder(self.encrypted_tree, self.encrypted_folder)
+        self._revise_folder(self.plain_tree, self.plain_folder)
 
         self.debug("encrypted_tree:")
         self.debug(self.encrypted_tree)
@@ -402,8 +411,7 @@ def main(args=sys.argv[1:]):
 
     syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder,
                           rule_set=rule_set, rule_file=args.rule_file,
-                          debug=True)
-                          # debug=args.debug)
+                          debug=args.debug)
 
     if args.change_password:
         newpass1 = None
