@@ -167,6 +167,7 @@ class FileRuleTestCase(unittest.TestCase):
         self.assertEqual(f2.test(self.file_entry), None)
 
     def test_lte(self):
+        self.file_entry.ctime = int(self.file_entry.ctime)
         f1 = FileRule('ctime', 'lte',
                       format_datetime(self.file_entry.ctime), 'include')
         f2 = FileRule('ctime', 'lte',
