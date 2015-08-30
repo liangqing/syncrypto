@@ -71,10 +71,11 @@ class Syncrypto:
 
     def debug(self, message):
         if self._debug:
-            print message
+            print "[DEBUG]", message
 
-    def info(self, message):
-        print message
+    @staticmethod
+    def info(message):
+        print "[INFO]", message
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
@@ -265,16 +266,24 @@ class Syncrypto:
         if not os.path.isdir(target_dir):
             os.makedirs(target_dir)
 
-    def _remove_entry(self, pathname, tree, root):
+    def _delete_file(self, pathname, target):
+        tree, root = None, None
+        if target == "encrypted folder":
+            tree = self.encrypted_tree
+            root = self.encrypted_folder
+        elif target == "plaintext folder":
+            tree = self.plain_tree
+            root = self.plain_folder
         file_entry = tree.get(pathname)
         fs_path = file_entry.fs_path(root)
         if os.path.isdir(fs_path):
             shutil.rmtree(fs_path)
             self.info("Delete folder %s in %s." % (file_entry.fs_pathname,
-                                                   root))
+                                                   target))
         elif os.path.exists(fs_path):
             os.remove(fs_path)
-            self.info("Delete file %s in %s." % (file_entry.fs_pathname, root))
+            self.info("Delete file %s in %s." % (file_entry.fs_pathname,
+                                                 target))
         tree.remove(pathname)
 
     def sync_folder(self):
@@ -301,6 +310,7 @@ class Syncrypto:
             plain_file = self.plain_tree.get(pathname)
             action = self._compare_file(encrypted_file, plain_file,
                                         self.snapshot_tree.get(pathname))
+            self.debug("%s: %s, %s" % (action, encrypted_file, plain_file))
             if action == "remove encrypted":
                 encrypted_remove_list.append(pathname)
             elif action == "remove plain":
@@ -318,11 +328,9 @@ class Syncrypto:
             results.append((action, pathname))
 
         for pathname in encrypted_remove_list:
-            self._remove_entry(pathname, self.encrypted_tree,
-                               self.encrypted_folder)
+            self._delete_file(pathname, "encrypted folder")
         for pathname in plain_remove_list:
-            self._remove_entry(pathname, self.plain_tree,
-                               self.plain_folder)
+            self._delete_file(pathname, "plaintext folder")
 
         self.debug("encrypted_tree:")
         self.debug(self.encrypted_tree)
@@ -392,7 +400,8 @@ def main(args=sys.argv[1:]):
 
     syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder,
                           rule_set=rule_set, rule_file=args.rule_file,
-                          debug=args.debug)
+                          debug=True)
+                          # debug=args.debug)
 
     if args.change_password:
         newpass1 = None
@@ -422,4 +431,3 @@ def main(args=sys.argv[1:]):
             syncrypto.sync_folder()
         return 0
     return 1
-

@@ -8,7 +8,7 @@ import os
 import os.path
 import shutil
 from tempfile import mkstemp, mkdtemp
-from syncrypto import File, FileRule, FileRuleSet, FileTree, Crypto, Syncrypto
+from syncrypto import FileEntry, FileRule, FileRuleSet, FileTree, Crypto, Syncrypto
 from syncrypto import cmd as syncrypto_cmd
 from time import time, strftime, localtime, sleep
 from cStringIO import StringIO 
@@ -62,7 +62,7 @@ def prepare_filetree(root, tree_string):
         fp.close()
 
 
-class FileTestCase(unittest.TestCase):
+class FileEntryTestCase(unittest.TestCase):
 
     def setUp(self):
         file_fp, file_path = mkstemp()
@@ -75,7 +75,7 @@ class FileTestCase(unittest.TestCase):
             'mtime': stat.st_mtime,
             'mode': stat.st_mode,
         }
-        self.file_object = File(**self.file_attrs)
+        self.file_object = FileEntry(**self.file_attrs)
 
     def tearDown(self):
         os.remove(self.file_path)
@@ -109,7 +109,7 @@ class FileTestCase(unittest.TestCase):
             'isdir': False,
             'salt': None
         }
-        file_object = File.from_file(self.file_path, d['pathname'])
+        file_object = FileEntry.from_file(self.file_path, d['pathname'])
         self.assertEqual(d, file_object.to_dict())
 
     def test_from_dict(self):
@@ -125,7 +125,7 @@ class FileTestCase(unittest.TestCase):
             'isdir': False,
             'salt': None
         }
-        file_object = File(**d)
+        file_object = FileEntry(**d)
         self.assertEqual(d, file_object.to_dict())
 
 
@@ -134,7 +134,7 @@ class FileRuleTestCase(unittest.TestCase):
     def setUp(self):
         file_fp, file_path = mkstemp()
         self.file_path = file_path
-        self.file_entry = File.from_file(self.file_path, os.path.basename(
+        self.file_entry = FileEntry.from_file(self.file_path, os.path.basename(
             self.file_path))
 
     def tearDown(self):
@@ -199,7 +199,7 @@ class FileRuleSetTestCase(unittest.TestCase):
     def setUp(self):
         file_fp, file_path = mkstemp()
         self.file_path = file_path
-        self.file_entry = File.from_file(self.file_path, os.path.basename(
+        self.file_entry = FileEntry.from_file(self.file_path, os.path.basename(
             self.file_path))
 
     def tearDown(self):
@@ -290,7 +290,7 @@ class CryptoTestCase(unittest.TestCase):
         self.password = 'password'
         self.crypto = Crypto(self.password)
         self.file_path = file_path
-        self.file_entry = File.from_file(file_path, os.path.basename(file_path))
+        self.file_entry = FileEntry.from_file(file_path, os.path.basename(file_path))
 
     def tearDown(self):
         os.remove(self.file_path)

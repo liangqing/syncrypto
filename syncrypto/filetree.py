@@ -14,7 +14,7 @@ class InvalidRuleString(Exception):
     pass
 
 
-class File:
+class FileEntry:
 
     def __init__(self, pathname, size, ctime, mtime, mode, digest=None,
                  isdir=False, fs_pathname=None, salt=None):
@@ -32,10 +32,13 @@ class File:
         s = StringIO()
         t = datetime.fromtimestamp(self.mtime)
         if self.isdir:
-            print >>s, 'directory', self.pathname, ':', t, self.fs_pathname
+            print >>s, 'directory', self.pathname, ':', t, self.fs_pathname,
         else:
-            print >>s, 'file', self.pathname, ':', t, self.fs_pathname
+            print >>s, 'file', self.pathname, ':', t, self.fs_pathname,
         return s.getvalue()
+
+    def name(self):
+        return (self.split())[1]
 
     def split(self):
         pos = self.pathname.rfind('/')
@@ -51,7 +54,7 @@ class File:
 
     def to_dict(self):
         d = {}
-        for k in File.properties():
+        for k in FileEntry.properties():
             v = getattr(self, k)
             if v is not None and (k == 'digest' or k == 'salt'):
                 d[k] = v.encode('hex')
@@ -60,7 +63,7 @@ class File:
         return d
 
     def clone(self):
-        return File(self.pathname, self.size, self.ctime, self.mtime, 
+        return FileEntry(self.pathname, self.size, self.ctime, self.mtime,
                     self.mode, self.digest, self.isdir, self.fs_pathname)
 
     def copy_attr_from(self, target):
@@ -113,7 +116,7 @@ class FileRule:
             raise ValueError("Unsupported file filter op: "+op)
         if attr == 'path':
             attr = 'pathname'
-        if attr != 'name' and attr not in File.properties():
+        if attr != 'name' and attr not in FileEntry.properties():
             raise ValueError("Unsupported file filter attribute: "+attr)
         self.attr = attr
         if attr == 'size':
@@ -227,6 +230,18 @@ class FileRuleSet:
                         action)
 
 
+class FileNode:
+
+    def __init__(self, entry):
+        self.entry = entry
+        self.children = {}
+
+    def append(self, entry):
+        node = FileNode(entry)
+        self.children[entry.name()] = node
+        return node
+
+
 class FileTree:
 
     def __init__(self, table=None):
@@ -276,7 +291,7 @@ class FileTree:
         isfile = os.path.isfile(path)
         isdir = os.path.isdir(path)
         if (isfile or isdir) and pathname != '':
-            file_entry = File.from_file(path, pathname)
+            file_entry = FileEntry.from_file(path, pathname)
             if rule_set is None:
                 self._table[pathname] = file_entry
             else:
@@ -298,7 +313,7 @@ class FileTree:
         table = self._table
         s = StringIO()
         for key, item in table.iteritems():
-            print >>s, item
+            print >>s, "\t", item
         return s.getvalue()
 
     def to_dict(self):
@@ -322,5 +337,5 @@ class FileTree:
         if 'table' in d:
             t = d['table']
             for pathname, f in t.iteritems():
-                table[pathname] = File.from_dict(f)
+                table[pathname] = FileEntry.from_dict(f)
         return cls(table)

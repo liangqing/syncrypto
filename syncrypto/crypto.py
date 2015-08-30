@@ -7,7 +7,7 @@ from cStringIO import StringIO
 import zlib
 import hashlib
 from struct import pack, unpack
-from filetree import File
+from filetree import FileEntry
 from time import time
 
 
@@ -101,7 +101,7 @@ class Crypto:
     @staticmethod
     def _unpack_header(header, header_size):
         (size, ctime, mtime, mode) = unpack('!QIIi', header[16:36])
-        return File(header[36:header_size], size, ctime, mtime, mode,
+        return FileEntry(header[36:header_size], size, ctime, mtime, mode,
                     header[:16], False)
 
     def encrypt_fd(self, in_fd, out_fd, file_entry, flags=0):
@@ -119,7 +119,7 @@ class Crypto:
         """
         bs = self.block_size
         if file_entry is None:
-            file_entry = File('.tmp', 0, time(), time(), 0)
+            file_entry = FileEntry('.tmp', 0, time(), time(), 0)
         if file_entry.salt is None:
             file_entry.salt = Random.new().read(bs - 4)
         key, iv = self.gen_key_and_iv(file_entry.salt)
