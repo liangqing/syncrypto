@@ -93,11 +93,12 @@ class Syncrypto:
             self._generate_encrypted_path(encrypted_file)
         encrypted_path = encrypted_file.fs_path(self.encrypted_folder)
         mtime = plain_file.mtime
-        if os.path.isdir(plain_path):
+        if plain_file.isdir:
             if not os.path.exists(encrypted_path):
                 os.makedirs(encrypted_path)
             os.chmod(encrypted_path, plain_file.mode | S_IWUSR | S_IRUSR)
             os.utime(encrypted_path, (mtime, mtime))
+            encrypted_file.copy_attr_from(plain_file)
             return encrypted_file
         if os.path.isdir(encrypted_path):
             shutil.rmtree(encrypted_path)
@@ -123,11 +124,12 @@ class Syncrypto:
             plain_file.fs_pathname = plain_file.pathname
         plain_path = plain_file.fs_path(self.plain_folder)
         mtime = encrypted_file.mtime
-        if os.path.isdir(encrypted_path):
+        if encrypted_file.isdir:
             if not os.path.exists(plain_path):
                 os.makedirs(plain_path)
             os.chmod(plain_path, encrypted_file.mode | S_IWUSR | S_IRUSR)
             os.utime(plain_path, (mtime, mtime))
+            plain_file.copy_attr_from(encrypted_file)
             return plain_file
         if os.path.isdir(plain_path):
             shutil.rmtree(plain_path)
