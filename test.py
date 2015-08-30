@@ -30,6 +30,14 @@ def clear_folder(folder):
             os.remove(path)
 
 
+def print_folder(folder):
+    for root, dirs, files in os.walk(folder):
+        for d in dirs:
+            print root + "/" +d
+        for f in files:
+            print root + "/" + f
+
+
 def prepare_filetree(root, tree_string):
     lines = tree_string.split("\n")
     for line in lines:
@@ -451,11 +459,11 @@ class CmdTestCase(unittest.TestCase):
 
     def checkResultAfterSync(self):
         print ">>>> first"
-        print os.listdir(self.encrypted_folder)
+        print_folder(self.encrypted_folder)
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder])
         print ">>>> second"
-        print os.listdir(self.encrypted_folder)
+        print_folder(self.encrypted_folder)
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder_check])
 

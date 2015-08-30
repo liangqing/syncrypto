@@ -70,13 +70,14 @@ class Syncrypto:
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
+        parent = self.encrypted_tree.get(dirname)
         md5 = hashlib.md5(name).hexdigest()
         i = 2
         while True:
             if dirname == '':
                 fs_pathname = md5[:i]
             else:
-                fs_pathname = dirname + '/' + md5[:i]
+                fs_pathname = parent.fs_pathname + '/' + md5[:i]
             if not self.encrypted_tree.has_fs_pathname(fs_pathname):
                 encrypted_file.fs_pathname = fs_pathname
                 return
@@ -90,7 +91,6 @@ class Syncrypto:
         if encrypted_file is None:
             encrypted_file = plain_file.clone()
             self._generate_encrypted_path(encrypted_file)
-            self.encrypted_tree.put(pathname, encrypted_file)
         encrypted_path = encrypted_file.fs_path(self.encrypted_folder)
         mtime = plain_file.mtime
         if os.path.isdir(plain_path):
@@ -98,7 +98,7 @@ class Syncrypto:
                 os.makedirs(encrypted_path)
             os.chmod(encrypted_path, plain_file.mode | S_IWUSR | S_IRUSR)
             os.utime(encrypted_path, (mtime, mtime))
-            return
+            return encrypted_file
         if os.path.isdir(encrypted_path):
             shutil.rmtree(encrypted_path)
         directory = os.path.dirname(encrypted_path)
@@ -112,6 +112,7 @@ class Syncrypto:
         os.utime(encrypted_path, (mtime, mtime))
         plain_fd.close()
         encrypted_fd.close()
+        return encrypted_file
 
     def _decrypt_file(self, pathname):
         encrypted_file = self.encrypted_tree.get(pathname)
@@ -120,7 +121,6 @@ class Syncrypto:
         if plain_file is None:
             plain_file = encrypted_file.clone()
             plain_file.fs_pathname = plain_file.pathname
-            self.plain_tree.put(pathname, plain_file)
         plain_path = plain_file.fs_path(self.plain_folder)
         mtime = encrypted_file.mtime
         if os.path.isdir(encrypted_path):
@@ -128,7 +128,7 @@ class Syncrypto:
                 os.makedirs(plain_path)
             os.chmod(plain_path, encrypted_file.mode | S_IWUSR | S_IRUSR)
             os.utime(plain_path, (mtime, mtime))
-            return
+            return plain_file
         if os.path.isdir(plain_path):
             shutil.rmtree(plain_path)
         directory = os.path.dirname(plain_path)
@@ -142,6 +142,7 @@ class Syncrypto:
         encrypted_fd.close()
         os.chmod(plain_path, encrypted_file.mode)
         os.utime(plain_path, (mtime, mtime))
+        return plain_file
 
     def _is_ignore(self, plain_file, encrypted_file):
         return (self.rule_set.test(plain_file) != 'include' and
@@ -152,41 +153,37 @@ class Syncrypto:
         encrypted_file = self.encrypted_tree.get(pathname)
         snapshot_file = self.snapshot_tree.get(pathname)
         if self._is_ignore(plain_file, encrypted_file):
-            return "exclude", None
+            return "exclude", None, None
         if plain_file is not None and encrypted_file is not None:
             if plain_file.mtime > encrypted_file.mtime:
-                self._encrypt_file(pathname)
-                return "encrypted", plain_file
+                return "encrypted", self._encrypt_file(pathname), plain_file
             elif plain_file.mtime < encrypted_file.mtime:
-                self._decrypt_file(pathname)
-                return "decrypted", encrypted_file
+                return "decrypted", encrypted_file, self._decrypt_file(pathname)
         elif plain_file is not None:
             # encrypted_tree.is_new or \
             if snapshot_file is None or snapshot_file.mtime < plain_file.mtime:
-                self._encrypt_file(pathname)
-                return "encrypted", plain_file
+                return "encrypted", self._encrypt_file(pathname), plain_file
             else:
                 fs_path = plain_file.fs_path(self.plain_folder)
                 if os.path.isdir(fs_path):
                     shutil.rmtree(fs_path)
-                    return "remove plain directory", None
+                    return "remove plain directory", None, None
                 elif os.path.exists(fs_path):
                     os.remove(fs_path)
-                    return "remove plain file", None
+                    return "remove plain file", None, None
         elif encrypted_file is not None:
             if snapshot_file is not None and snapshot_file.mtime >= \
                     encrypted_file.mtime:
                 fs_path = encrypted_file.fs_path(self.encrypted_folder)
                 if os.path.isdir(fs_path):
                     shutil.rmtree(fs_path)
-                    return "remove encrypted directory", None
+                    return "remove encrypted directory", None, None
                 elif os.path.exists(fs_path):
                     os.remove(fs_path)
-                    return "remove encrypted file", None
+                    return "remove encrypted file", None, None
             else:
-                self._decrypt_file(pathname)
-                return "decrypted", encrypted_file
-        return None, None
+                return "decrypted", encrypted_file, self._decrypt_file(pathname)
+        return None, None, None
 
     def _encrypted_trash_path(self):
         i = 0
@@ -276,19 +273,25 @@ class Syncrypto:
     def sync_folder(self):
         if self.plain_folder is None:
             raise Exception("please specify the plaintext folder to sync files")
-        pathnames = set(self.plain_tree.pathnames() + self.encrypted_tree.
-                        pathnames())
-        new_snapshot_tree = FileTree()
+
         results = []
-        print self.encrypted_tree
-        print self.plain_tree
+        pathnames = list(set(self.plain_tree.pathnames() +
+                             self.encrypted_tree.pathnames()))
+        pathnames.sort()
         for pathname in pathnames:
-            action, file_entry = self._sync_file(pathname)
-            print pathname, action
-            if file_entry is not None:
-                new_snapshot_tree.set(pathname, file_entry)
-            results.append((action, file_entry))
-        self.snapshot_tree = new_snapshot_tree
+            action, encrypted_file, plain_file = self._sync_file(pathname)
+            print action, pathname
+            if encrypted_file is None:
+                self.encrypted_tree.remove(pathname)
+            else:
+                self.encrypted_tree.set(pathname, encrypted_file)
+            if plain_file is None:
+                self.plain_tree.remove(pathname)
+            else:
+                self.plain_tree.set(pathname, plain_file)
+            results.append((action, encrypted_file, plain_file))
+
+        self.snapshot_tree = self.encrypted_tree
         self._save_trees()
         return results
 

@@ -259,8 +259,9 @@ class FileTree:
     def set(self, pathname, file_entry):
         self._table[pathname] = file_entry
 
-    def put(self, pathname, file_entry):
-        self._table[pathname] = file_entry
+    def remove(self, pathname):
+        if pathname in self._table:
+            del self._table[pathname]
 
     def has(self, pathname):
         return pathname in self._table
