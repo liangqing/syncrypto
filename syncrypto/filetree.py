@@ -120,7 +120,7 @@ class FileRule:
             self.value = int(value)
         elif attr == 'ctime' or attr == 'mtime':
             self.value = time.mktime(datetime.strptime(
-                value, "%Y-%m-%d %H:%M:%S").timetuple()) - time.timezone
+                value, "%Y-%m-%d %H:%M:%S").timetuple())
         else:
             self.value = value
         self.op = op

@@ -270,11 +270,11 @@ class Syncrypto:
         fs_path = file_entry.fs_path(root)
         if os.path.isdir(fs_path):
             shutil.rmtree(fs_path)
-            self.info("Remove folder %s in %s." % (file_entry.fs_pathname,
+            self.info("Delete folder %s in %s." % (file_entry.fs_pathname,
                                                    root))
         elif os.path.exists(fs_path):
             os.remove(fs_path)
-            self.info("Remove file %s in %s." % (file_entry.fs_pathname, root))
+            self.info("Delete file %s in %s." % (file_entry.fs_pathname, root))
         tree.remove(pathname)
 
     def sync_folder(self):

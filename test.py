@@ -10,13 +10,13 @@ import shutil
 from tempfile import mkstemp, mkdtemp
 from syncrypto import File, FileRule, FileRuleSet, FileTree, Crypto, Syncrypto
 from syncrypto import cmd as syncrypto_cmd
-from time import time, strftime, gmtime, sleep
+from time import time, strftime, localtime, sleep
 from cStringIO import StringIO 
 from filecmp import dircmp
 
 
 def format_datetime(t):
-    return strftime("%Y-%m-%d %H:%M:%S", gmtime(t))
+    return strftime("%Y-%m-%d %H:%M:%S", localtime(t))
 
 
 def clear_folder(folder):
