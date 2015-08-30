@@ -119,8 +119,8 @@ class FileRule:
         if attr == 'size':
             self.value = int(value)
         elif attr == 'ctime' or attr == 'mtime':
-            self.value = (datetime.strptime(value, "%Y-%m-%d %H:%M:%S") -
-                          datetime(1970, 1, 1)).total_seconds() + time.timezone
+            self.value = time.mktime(datetime.strptime(
+                value, "%Y-%m-%d %H:%M:%S").timetuple()) - time.timezone
         else:
             self.value = value
         self.op = op

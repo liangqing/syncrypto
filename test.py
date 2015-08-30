@@ -10,13 +10,13 @@ import shutil
 from tempfile import mkstemp, mkdtemp
 from syncrypto import File, FileRule, FileRuleSet, FileTree, Crypto, Syncrypto
 from syncrypto import cmd as syncrypto_cmd
-from time import time, strftime, localtime
+from time import time, strftime, gmtime, sleep
 from cStringIO import StringIO 
 from filecmp import dircmp
 
 
 def format_datetime(t):
-    return strftime("%Y-%m-%d %H:%M:%S", localtime(t))
+    return strftime("%Y-%m-%d %H:%M:%S", gmtime(t))
 
 
 def clear_folder(folder):
@@ -458,14 +458,18 @@ class CmdTestCase(unittest.TestCase):
         self.assertEqual(len(dcmp.diff_files), 0)
 
     def checkResultAfterSync(self):
-        print ">>>> first"
-        print_folder(self.encrypted_folder)
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder])
-        print ">>>> second"
-        print_folder(self.encrypted_folder)
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
                        self.plain_folder_check])
+        self.checkResult()
+
+    def checkResultAfterSyncFromCheckFolder(self):
+        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+                       self.plain_folder_check])
+        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+                       self.plain_folder])
+        self.checkResult()
 
     def clearFolders(self):
         clear_folder(self.plain_folder)
@@ -473,6 +477,7 @@ class CmdTestCase(unittest.TestCase):
         clear_folder(self.encrypted_folder)
 
     def modifyFile(self, folder, pathname, content):
+        sleep(1)
         fd = open(folder+os.path.sep+pathname, 'wb')
         fd.write(content)
         fd.close()
@@ -512,6 +517,10 @@ empty_dir/
         ''')
         self.checkResultAfterSync()
         self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
+        self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
+        self.checkResultAfterSyncFromCheckFolder()
         self.checkResultAfterSync()
 
     def testModifyFile(self):
@@ -541,7 +550,7 @@ empty_dir/
                         "will_modify", "it is modified")
         self.modifyFile(self.plain_folder_check,
                         "file/in/sub/folder/will_modify", "it is modified")
-        self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
 
     def testRenameFile(self):
         self.clearFolders()
@@ -575,7 +584,7 @@ empty_dir/
                     "renamed2")
         self.rename(self.plain_folder_check, "will_rename2",
                     "file/in/sub/folder/renamed2")
-        self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
 
     def testAddFile(self):
         self.clearFolders()
@@ -601,7 +610,7 @@ empty_dir/
         self.addFile(self.plain_folder_check, "add_file", "add file")
         self.addFile(self.plain_folder_check, "file/in/sub/folder/add_file",
                      "add file!")
-        self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
 
     def testAddFolder(self):
         self.clearFolders()
@@ -628,7 +637,7 @@ empty_dir/
         self.addFolder(self.plain_folder_check, "folder/with/file")
         self.addFile(self.plain_folder_check, "folder/with/file/test",
                      "test\ntest!")
-        self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
 
     def testDeleteFile(self):
         self.clearFolders()
@@ -639,7 +648,6 @@ file/in/sub/folder/delete_me: oh, please delete me!
         self.checkResultAfterSync()
         self.deleteFile(self.plain_folder, "delete_me")
         self.deleteFile(self.plain_folder, "file/in/sub/folder/delete_me")
-        print "look start here!"
         self.checkResultAfterSync()
 
     def testDeleteFileInCheckFolder(self):
@@ -651,7 +659,7 @@ file/in/sub/folder/delete_me: oh, please delete me!
         self.checkResultAfterSync()
         self.deleteFile(self.plain_folder_check, "delete_me")
         self.deleteFile(self.plain_folder_check, "file/in/sub/folder/delete_me")
-        self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
 
     def testDeleteFolder(self):
         self.clearFolders()
@@ -687,7 +695,7 @@ non_empty_folder2/in/sub/folder/file: test 2
         self.deleteFolder(self.plain_folder_check, "non_empty_folder1")
         self.deleteFolder(self.plain_folder_check,
                           "non_empty_folder2/in/sub/folder")
-        self.checkResultAfterSync()
+        self.checkResultAfterSyncFromCheckFolder()
 
     def testRuleSet(self):
         self.clearFolders()

@@ -70,13 +70,13 @@ class Syncrypto:
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
-        parent = self.encrypted_tree.get(dirname)
         md5 = hashlib.md5(name).hexdigest()
         i = 2
         while True:
             if dirname == '':
                 fs_pathname = md5[:i]
             else:
+                parent = self.encrypted_tree.get(dirname)
                 fs_pathname = parent.fs_pathname + '/' + md5[:i]
             if not self.encrypted_tree.has_fs_pathname(fs_pathname):
                 encrypted_file.fs_pathname = fs_pathname
@@ -183,7 +183,7 @@ class Syncrypto:
                     return "remove encrypted file", None, None
             else:
                 return "decrypted", encrypted_file, self._decrypt_file(pathname)
-        return None, None, None
+        return None, plain_file, encrypted_file
 
     def _encrypted_trash_path(self):
         i = 0
@@ -278,19 +278,24 @@ class Syncrypto:
         pathnames = list(set(self.plain_tree.pathnames() +
                              self.encrypted_tree.pathnames()))
         pathnames.sort()
+        encrypted_remove_list = []
+        plain_remove_list = []
         for pathname in pathnames:
             action, encrypted_file, plain_file = self._sync_file(pathname)
-            print action, pathname
             if encrypted_file is None:
-                self.encrypted_tree.remove(pathname)
+                encrypted_remove_list.append(pathname)
             else:
                 self.encrypted_tree.set(pathname, encrypted_file)
             if plain_file is None:
-                self.plain_tree.remove(pathname)
+                plain_remove_list.append(pathname)
             else:
                 self.plain_tree.set(pathname, plain_file)
             results.append((action, encrypted_file, plain_file))
 
+        for pathname in encrypted_remove_list:
+            self.encrypted_tree.remove(pathname)
+        for pathname in plain_remove_list:
+            self.plain_tree.remove(pathname)
         self.snapshot_tree = self.encrypted_tree
         self._save_trees()
         return results
