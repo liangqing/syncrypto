@@ -1,6 +1,9 @@
 Synchronize a folder with its encrypted content
 ===============================================
 
+.. image:: https://travis-ci.org/liangqing/syncrypto.svg?branch=master
+    :target: https://travis-ci.org/liangqing/syncrypto
+
 Introduction
 ------------
 You can use "syncrypto" to encrypt a folder to another folder which contains the
