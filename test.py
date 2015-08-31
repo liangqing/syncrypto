@@ -57,7 +57,7 @@ def prepare_filetree(root, tree_string):
         directory = os.path.dirname(path)
         if not os.path.exists(directory):
             os.makedirs(directory)
-        fp = open(path, 'rw')
+        fp = open(path, 'wb')
         fp.write(content)
         fp.close()
 
@@ -76,7 +76,7 @@ class FileEntryTestCase(unittest.TestCase):
             'mode': stat.st_mode,
         }
         self.file_object = FileEntry(**self.file_attrs)
-        file_fp.close()
+        os.close(file_fp)
 
     def tearDown(self):
         os.remove(self.file_path)
@@ -137,7 +137,7 @@ class FileRuleTestCase(unittest.TestCase):
         self.file_path = file_path
         self.file_entry = FileEntry.from_file(self.file_path, os.path.basename(
             self.file_path))
-        file_fp.close()
+        os.close(file_fp)
 
     def tearDown(self):
         os.remove(self.file_path)
@@ -204,7 +204,7 @@ class FileRuleSetTestCase(unittest.TestCase):
         self.file_path = file_path
         self.file_entry = FileEntry.from_file(self.file_path, os.path.basename(
             self.file_path))
-        file_fp.close()
+        os.close(file_fp)
 
     def tearDown(self):
         os.remove(self.file_path)
@@ -296,7 +296,7 @@ class CryptoTestCase(unittest.TestCase):
         self.file_path = file_path
         self.file_entry = FileEntry.from_file(file_path,
                                               os.path.basename(file_path))
-        file_fp.close()
+        os.close(file_fp)
 
     def tearDown(self):
         os.remove(self.file_path)
