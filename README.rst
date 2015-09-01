@@ -6,12 +6,12 @@ Synchronize a folder with its encrypted content
 
 Introduction
 ------------
-You can use "syncrypto" to encrypt a folder to another folder which contains the
+You can use ``syncrypto`` to encrypt a folder to another folder which contains the
 corresponding encrypted content of the files within former.
 
 The most common scenario is\:
 
-.. code::
+.. code-block::
 
                          syncrypto                         syncrypto
   plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
@@ -26,13 +26,13 @@ modified in the encrypted folder. This make sure the synchronization changes the
 minimal files in encrypted folder.
 
 The synchronization is bidirectional, every time you synchronize two folders
-(one is plaintext folder, another is encrypted folder) with "syncrypto",
+(one is plaintext folder, another is encrypted folder) with ``syncrypto``,
 you will get the same result in the two folders finally.
 
 Installation
 ------------
 
-.. code:: bash
+.. code-block:: bash
 
     pip install syncrypto
 
@@ -113,6 +113,6 @@ in file.
 
 
 License
--------
+~~~~~~~
 
 Apache License
