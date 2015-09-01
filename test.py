@@ -3,7 +3,6 @@
 
 import unittest
 
-from Crypto import Random
 import os
 import os.path
 import shutil
@@ -247,9 +246,9 @@ class FileRuleSetTestCase(unittest.TestCase):
         rule_set = FileRuleSet()
         rule_set.add_rule_by_string("exclude: size > 1024000")
         self.assertEqual(rule_set.test(self.file_entry), rule_set.default_action)
-        rule_set = FileRuleSet(default_action="hahaha")
+        rule_set = FileRuleSet(default_action="laf")
         rule_set.add_rule_by_string("exclude: size > 1024000")
-        self.assertEqual(rule_set.test(self.file_entry), "hahaha")
+        self.assertEqual(rule_set.test(self.file_entry), "laf")
 
     def testMatchPattern(self):
         f = FileRuleSet.parse("exclude: name match *_not_sync")
@@ -316,7 +315,7 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = StringIO()
         middle_fd = StringIO()
         out_fd = StringIO()
-        in_fd.write(Random.new().read(1024*1024))
+        in_fd.write(os.urandom(1024*1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry)
         middle_fd.seek(0)
@@ -338,7 +337,7 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = StringIO()
         out_fd1 = StringIO()
         out_fd2 = StringIO()
-        in_fd.write(Random.new().read(1024))
+        in_fd.write(os.urandom(1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, out_fd1, self.file_entry)
         in_fd.seek(0)
@@ -349,7 +348,7 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = StringIO()
         middle_fd = StringIO()
         out_fd = StringIO()
-        in_fd.write(Random.new().read(1024))
+        in_fd.write(os.urandom(1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry,
                                Crypto.COMPRESS)
