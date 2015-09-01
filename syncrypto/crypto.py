@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-from Crypto.Cipher import AES
-from Crypto import Random
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+import os
 from cStringIO import StringIO 
 import zlib
 import hashlib
@@ -43,7 +44,7 @@ class Crypto:
 
         self.password = password
         self.key_size = key_size
-        self.block_size = AES.block_size
+        self.block_size = 16
 
     def encrypt_file(self, plain_path, encrypted_path, plain_file):
         plain_fd = open(plain_path, 'rb')
@@ -91,73 +92,81 @@ class Crypto:
         return header_size, header_padding, pathname
 
     @staticmethod
-    def _build_header(file_entry, pathname):
+    def _build_footer(file_entry):
         return file_entry.digest + \
                pack('!Q', file_entry.size) + \
                pack('!I', int(file_entry.ctime)) + \
                pack('!I', int(file_entry.mtime)) + \
-               pack('!i', file_entry.mode) + pathname
+               pack('!i', file_entry.mode) + (12 * chr(0))
 
     @staticmethod
-    def _unpack_header(header, header_size):
-        (size, ctime, mtime, mode) = unpack('!QIIi', header[16:36])
-        return FileEntry(header[36:header_size], size, ctime, mtime, mode,
-                    header[:16], False)
+    def _unpack_footer(pathname, footer):
+        (size, ctime, mtime, mode) = unpack('!QIIi', footer[16:36])
+        return FileEntry(pathname, size, ctime, mtime, mode,
+                         footer[:16], False)
 
     def encrypt_fd(self, in_fd, out_fd, file_entry, flags=0):
         """
-            header:
-                version(1) + flags(1) + header_size(2) + salt(12), block_size
-                encrypted header, header_size + padding_length
-                    digest, 16
-                    size, 8
-                    ctime, 4
-                    mtime, 4
-                    mode, 4
-                    pathname, rest
-                encrypted content, rest
+            +-----------------------------------------------------+
+            | Version(1) | Flags(1) | Pathname size(2) | Salt(12) |
+            +-----------------------------------------------------+
+            |                   Encrypted Pathname                |
+            +-----------------------------------------------------+
+            |                   Encrypted Content                 |
+            |                         ...                         |
+            +-----------------------------------------------------+
+            |                   Encrypted Digest(16)              |
+            +-----------------------------------------------------+
+            |         size(8)*        |   ctime(4)   |   mtime(4) |
+            +-----------------------------------------------------+
+            |     mode(4)   |            padding(12)              |
+            +-----------------------------------------------------+
+
+            * size, ctime, mtime, mode are also encrypted
         """
         bs = self.block_size
         if file_entry is None:
             file_entry = FileEntry('.tmp', 0, time(), time(), 0)
         if file_entry.salt is None:
-            file_entry.salt = Random.new().read(bs - 4)
+            file_entry.salt = os.urandom(bs - 4)
         key, iv = self.gen_key_and_iv(file_entry.salt)
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        (header_size, header_padding, pathname) = self._header_size(file_entry)
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
+                        backend=default_backend())
+        encryptor = cipher.encryptor()
+        pathname = file_entry.pathname[:2**16]
+        pathname_size = len(pathname)
+        pathname_padding = ''
+        if pathname_size % bs != 0:
+            padding_length = (bs - pathname_size % bs)
+            pathname_padding = padding_length * chr(0)
 
         flags &= 0xFF
         out_fd.write(chr(self.VERSION))
         out_fd.write(chr(flags))
-        out_fd.write(pack('!H', header_size))
+        out_fd.write(pack('!H', pathname_size))
         out_fd.write(file_entry.salt)
+        out_fd.write(encryptor.update(pathname+pathname_padding))
 
-        if file_entry.digest is None:
-            md5 = hashlib.md5()
-            pos = in_fd.tell()
-            while True:
-                chunk = in_fd.read(self.BUFFER_SIZE * bs)
-                md5.update(chunk)
-                if len(chunk) == 0:
-                    break
-            file_entry.digest = md5.digest()
-            in_fd.seek(pos)
-        header = self._build_header(file_entry, pathname)
-        out_fd.write(cipher.encrypt(header+header_padding))
-
-        finished = False
         if flags & Crypto.COMPRESS:
             buf = StringIO()
             self.compress_fd(in_fd, buf)
             in_fd = buf
             in_fd.seek(0)
+
+        finished = False
+        md5 = hashlib.md5()
         while not finished:
             chunk = in_fd.read(Crypto.BUFFER_SIZE * bs)
+            md5.update(chunk)
             if len(chunk) == 0 or len(chunk) % bs != 0:
                 padding_length = (bs - len(chunk) % bs) or bs
                 chunk += padding_length * chr(padding_length)
                 finished = True
-            out_fd.write(cipher.encrypt(chunk))
+            out_fd.write(encryptor.update(chunk))
+
+        file_entry.digest = md5.digest()
+        out_fd.write(encryptor.update(self._build_footer(file_entry)))
+        out_fd.write(encryptor.finalize())
         return file_entry
 
     def decrypt_fd(self, in_fd, out_fd):
@@ -171,35 +180,38 @@ class Crypto:
         if version > self.VERSION:
             raise VersionNotCompatible("Unrecognized version: (%d)" % version)
         flags = ord(line[1])
-        (header_size,) = unpack('!H', line[2:4])
+        (pathname_size,) = unpack('!H', line[2:4])
         salt = line[4:]
         key, iv = self.gen_key_and_iv(salt)
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        header_block_size = header_size
-        if header_size % bs != 0:
-            header_block_size = (header_size/bs+1) * bs
-        header_data = in_fd.read(header_block_size)
-        if len(header_data) < header_block_size:
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
+                        backend=default_backend())
+        decryptor = cipher.decryptor()
+        pathname_block_size = pathname_size
+        if pathname_size % bs != 0:
+            pathname_block_size = (pathname_size/bs+1) * bs
+        pathname_data = in_fd.read(pathname_block_size)
+        if len(pathname_data) < pathname_block_size:
             raise UnrecognizedContent(
-                "header size is not correct, expect %d, got %d" %
-                (header_block_size, len(header_data)))
-        header = cipher.decrypt(header_data)[:header_size]
-        file_entry = self._unpack_header(header, header_size)
-        file_entry.salt = salt
+                "pathname length is not correct, expect %d, got %d" %
+                (pathname_block_size, len(pathname_data)))
+        pathname = decryptor.update(pathname_data)[:pathname_size]
         str_io = StringIO()
         md5 = hashlib.md5()
         next_chunk = ''
         finished = False
+        file_entry = None
         while not finished:
-            encrypted = in_fd.read(self.BUFFER_SIZE * bs)
-            chunk, next_chunk = next_chunk, cipher.decrypt(encrypted)
-            if len(next_chunk) == 0:
-                padding_length = ord(chunk[-1])
-                chunk = chunk[:-padding_length]
-                finished = True
-            str_io.write(chunk)
-            if not flags & self.COMPRESS:
-                md5.update(chunk)
+            chunk, next_chunk = next_chunk, in_fd.read(self.BUFFER_SIZE * bs)
+            if chunk:
+                plaintext = decryptor.update(chunk)
+                if len(next_chunk) == 0:
+                    plaintext += decryptor.finalize()
+                    file_entry = self._unpack_footer(pathname, plaintext[-48:])
+                    padding_length = ord(plaintext[-49])
+                    plaintext = plaintext[:-padding_length-48]
+                    finished = True
+                str_io.write(plaintext)
+                md5.update(plaintext)
         if flags & self.COMPRESS:
             buf = StringIO()
             str_io.seek(0)
@@ -207,10 +219,11 @@ class Crypto:
             str_io.close()
             str_io = buf
             str_io.seek(0)
-            md5.update(str_io.getvalue())
-        digest = file_entry.digest
-        if digest != md5.digest()[:bs]:
+
+        file_entry.salt = salt
+        if file_entry.digest != md5.digest()[:bs]:
             raise DigestMissMatch()
+
         out_fd.write(str_io.getvalue())
         str_io.close()
         return file_entry

@@ -300,17 +300,39 @@ class CryptoTestCase(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.file_path)
-        
-    def testEncrypt(self):
+
+    def testBasicEncrypt(self):
         in_fd = StringIO()
         middle_fd = StringIO()
         out_fd = StringIO()
-        in_fd.write(Random.new().read(1024))
+        in_fd.write("hello")
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry)
         middle_fd.seek(0)
         self.crypto.decrypt_fd(middle_fd, out_fd)
         self.assertEqual(in_fd.getvalue(), out_fd.getvalue())
+
+    def testLargeEncrypt(self):
+        in_fd = StringIO()
+        middle_fd = StringIO()
+        out_fd = StringIO()
+        in_fd.write(Random.new().read(1024*1024))
+        in_fd.seek(0)
+        self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry)
+        middle_fd.seek(0)
+        self.crypto.decrypt_fd(middle_fd, out_fd)
+        self.assertEqual(in_fd.getvalue(), out_fd.getvalue())
+
+    def testEncryptTwice(self):
+        in_fd = StringIO()
+        out_fd1 = StringIO()
+        out_fd2 = StringIO()
+        in_fd.write("hello")
+        in_fd.seek(0)
+        self.crypto.encrypt_fd(in_fd, out_fd1, self.file_entry)
+        in_fd.seek(0)
+        self.crypto.encrypt_fd(in_fd, out_fd2, self.file_entry)
+        self.assertEqual(out_fd1.getvalue(), out_fd2.getvalue())
 
     def testRepeatEncrypt(self):
         in_fd = StringIO()

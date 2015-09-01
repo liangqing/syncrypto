@@ -24,7 +24,7 @@ setup(
         'Topic :: Communications :: File Sharing',
     ],
     packages=find_packages(),
-    install_requires=['pycrypto'],
+    install_requires=['cryptography'],
     package_data={
         'syncrypto': ['README.rst', 'LICENSE'],
     },
