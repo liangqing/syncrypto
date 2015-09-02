@@ -1,8 +1,15 @@
 Synchronize a folder with its encrypted content
 ===============================================
 
+.. image:: https://img.shields.io/pypi/v/syncrypto.svg
+    :target: https://pypi.python.org/pypi/syncrypto/
+    :alt: Latest Version
+
 .. image:: https://travis-ci.org/liangqing/syncrypto.svg?branch=master
     :target: https://travis-ci.org/liangqing/syncrypto
+
+.. image:: https://codecov.io/github/liangqing/syncrypto/coverage.svg?branch=master
+    :target: https://codecov.io/github/liangqing/syncrypto?branch=master
 
 Introduction
 ------------
