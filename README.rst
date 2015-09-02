@@ -12,7 +12,7 @@ Synchronize a folder with its encrypted content
     :target: https://codecov.io/github/liangqing/syncrypto?branch=master
 
 Introduction
-------------
+============
 You can use ``syncrypto`` to encrypt a folder to another folder which contains the
 corresponding encrypted content of the files within former.
 
@@ -37,7 +37,7 @@ The synchronization is bidirectional, every time you synchronize two folders
 you will get the same result in the two folders finally.
 
 Installation
-------------
+============
 
 .. code-block:: bash
 
@@ -45,9 +45,10 @@ Installation
 
 
 Usage
------
+=====
 
-1) Synchronization
+Synchronization
+---------------
 
 .. code-block:: bash
 
@@ -59,7 +60,8 @@ to verify the password you set before.
 
 
 
-2) Change the password
+Change the password
+-------------------
 
 .. code-block:: bash
 
@@ -67,7 +69,8 @@ to verify the password you set before.
 
 change the password of the encrypted folder
 
-3) Add rule for Synchronization
+Add rule for Synchronization
+----------------------------
 
 If you want ignore files while synchronizing, you can add rule to do that,
 such as\:
@@ -76,7 +79,7 @@ such as\:
 
     syncrypto --rule "ignore: name match *.swp"
 
-the command above ignores files which name matches *.swp
+the command above ignores files which name matches \*.swp
 
 You can add rules multiple times\:
 
@@ -84,7 +87,7 @@ You can add rules multiple times\:
 
     syncrypto --rule "include: name eq README.md" --rule "ignore: name match *.md"
 
-the command above ignores files matching "*.md" but includes files named "README.md".
+the command above ignores files matching "\*.md" but includes files named "README.md".
 
 The rules are ordered, it means that the rules in front have higher priority than
 later, if a rule matches, the matching process will returned immediately.
@@ -112,7 +115,8 @@ If you give some rules in command line, and write some rules in rule file at
 the same time, the rules in command line will have higher priority than rules
 in file.
 
-4) Show the help
+Show the help
+-------------
 
 .. code-block:: bash
 
@@ -120,6 +124,6 @@ in file.
 
 
 License
-~~~~~~~
+=======
 
 Apache License
