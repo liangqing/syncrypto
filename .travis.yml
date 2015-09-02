@@ -6,8 +6,7 @@ python:
 install:
   - "pip install ."
 # command to run tests
-script: nosetests
-
+script: nosetests  --rednose --with-cov
 before_install:
   - pip install codecov
 after_success:
