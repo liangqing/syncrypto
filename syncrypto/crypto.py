@@ -12,16 +12,16 @@ import os
 import zlib
 import hashlib
 from struct import pack, unpack
-from .filetree import FileEntry
 from time import time
 try:
-    from cStringIO import StringIO
+    from cStringIO import StringIO as BytesIO
 except ImportError:
-    from io import BytesIO as StringIO
+    from io import BytesIO
+from .filetree import FileEntry
 
 
 def _hex(data):
-    return binascii.hexlify(data)
+    return binascii.hexlify(data).decode('utf-8')
 
 
 class InvalidKey(Exception):
@@ -156,7 +156,7 @@ class Crypto:
         out_fd.write(encryptor.update(pathname+pathname_padding))
 
         if flags & Crypto.COMPRESS:
-            buf = StringIO()
+            buf = BytesIO()
             self.compress_fd(in_fd, buf)
             in_fd = buf
             in_fd.seek(0)
@@ -204,7 +204,7 @@ class Crypto:
                 "pathname length is not correct, expect %d, got %d" %
                 (pathname_block_size, len(pathname_data)))
         pathname = decryptor.update(pathname_data)[:pathname_size]
-        str_io = StringIO()
+        str_io = BytesIO()
         md5 = hashlib.md5()
         next_chunk = ''
         finished = False
@@ -222,7 +222,7 @@ class Crypto:
                 str_io.write(plaintext)
                 md5.update(plaintext)
         if flags & self.COMPRESS:
-            buf = StringIO()
+            buf = BytesIO()
             str_io.seek(0)
             self.decompress_fd(str_io, buf)
             str_io.close()

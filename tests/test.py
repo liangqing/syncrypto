@@ -10,14 +10,14 @@ import os.path
 import shutil
 from tempfile import mkstemp, mkdtemp
 from syncrypto import FileEntry, FileRule, FileRuleSet, FileTree, Crypto, \
-    Syncrypto
+    Syncrypto, InvalidFolder
 from syncrypto import cmd as syncrypto_cmd
 from time import time, strftime, localtime, sleep
 from filecmp import dircmp
 try:
-    from cStringIO import StringIO
+    from cStringIO import StringIO as BytesIO
 except ImportError:
-    from io import BytesIO as StringIO
+    from io import BytesIO
 
 
 def format_datetime(t):
@@ -307,10 +307,10 @@ class CryptoTestCase(unittest.TestCase):
         os.remove(self.file_path)
 
     def testBasicEncrypt(self):
-        in_fd = StringIO()
-        middle_fd = StringIO()
-        out_fd = StringIO()
-        in_fd.write("hello".encode("utf-8"))
+        in_fd = BytesIO()
+        middle_fd = BytesIO()
+        out_fd = BytesIO()
+        in_fd.write(b"hello")
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry)
         middle_fd.seek(0)
@@ -318,9 +318,9 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(in_fd.getvalue(), out_fd.getvalue())
 
     def testLargeEncrypt(self):
-        in_fd = StringIO()
-        middle_fd = StringIO()
-        out_fd = StringIO()
+        in_fd = BytesIO()
+        middle_fd = BytesIO()
+        out_fd = BytesIO()
         in_fd.write(os.urandom(1024*1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry)
@@ -329,10 +329,10 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(in_fd.getvalue(), out_fd.getvalue())
 
     def testEncryptTwice(self):
-        in_fd = StringIO()
-        out_fd1 = StringIO()
-        out_fd2 = StringIO()
-        in_fd.write("hello".encode("utf-8"))
+        in_fd = BytesIO()
+        out_fd1 = BytesIO()
+        out_fd2 = BytesIO()
+        in_fd.write(b"hello")
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, out_fd1, self.file_entry)
         in_fd.seek(0)
@@ -340,9 +340,9 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(out_fd1.getvalue(), out_fd2.getvalue())
 
     def testRepeatEncrypt(self):
-        in_fd = StringIO()
-        out_fd1 = StringIO()
-        out_fd2 = StringIO()
+        in_fd = BytesIO()
+        out_fd1 = BytesIO()
+        out_fd2 = BytesIO()
         in_fd.write(os.urandom(1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, out_fd1, self.file_entry)
@@ -351,9 +351,9 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(out_fd1.getvalue(), out_fd2.getvalue())
 
     def testCompress(self):
-        in_fd = StringIO()
-        middle_fd = StringIO()
-        out_fd = StringIO()
+        in_fd = BytesIO()
+        middle_fd = BytesIO()
+        out_fd = BytesIO()
         in_fd.write(os.urandom(1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry,
@@ -398,10 +398,10 @@ dir2/file2
                           self.snapshot_tree)
         sync.sync_folder()
         sync2.sync_folder()
-        dcmp = dircmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(len(dcmp.left_only), 0)
-        self.assertEqual(len(dcmp.right_only), 0)
-        self.assertEqual(len(dcmp.diff_files), 0)
+        directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(len(directory_cmp.left_only), 0)
+        self.assertEqual(len(directory_cmp.right_only), 0)
+        self.assertEqual(len(directory_cmp.diff_files), 0)
 
     def testInit(self):
         self.isPass()
@@ -485,10 +485,10 @@ class CmdTestCase(unittest.TestCase):
         shutil.rmtree(self.encrypted_folder)
 
     def checkResult(self):
-        dcmp = dircmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(len(dcmp.left_only), 0)
-        self.assertEqual(len(dcmp.right_only), 0)
-        self.assertEqual(len(dcmp.diff_files), 0)
+        directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(len(directory_cmp.left_only), 0)
+        self.assertEqual(len(directory_cmp.right_only), 0)
+        self.assertEqual(len(directory_cmp.diff_files), 0)
 
     def checkResultAfterSync(self):
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
@@ -531,6 +531,19 @@ class CmdTestCase(unittest.TestCase):
 
     def rename(self, folder, pathname, pathname2):
         os.rename(folder+os.path.sep+pathname, folder+os.path.sep+pathname2)
+
+    def passInvalidEncryptedFolder(self):
+        syncrypto_cmd(["--password", self.password,
+                       self.encrypted_folder+os.path.sep+"invalid_folder",
+                       self.plain_folder])
+
+    def passInvalidPlaintextFolder(self):
+        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+                       self.plain_folder+os.path.sep+"invalid_folder"])
+
+    def testFalseDirectory(self):
+        self.assertRaises(InvalidFolder, self.passInvalidEncryptedFolder)
+        self.assertRaises(InvalidFolder, self.passInvalidPlaintextFolder)
 
     def testBasicSync(self):
         self.clearFolders()
@@ -741,11 +754,40 @@ filename_not_sync: 2
                        self.encrypted_folder, self.plain_folder])
         syncrypto_cmd(["--password", self.password,
                        self.encrypted_folder, self.plain_folder_check])
-        dcmp = dircmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(dcmp.left_only, ["filename_not_sync"])
-        self.assertEqual(len(dcmp.right_only), 0)
-        self.assertEqual(len(dcmp.diff_files), 0)
+        directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
+        self.assertEqual(len(directory_cmp.right_only), 0)
+        self.assertEqual(len(directory_cmp.diff_files), 0)
 
+    def testRuleFile(self):
+        self.clearFolders()
+        prepare_filetree(self.plain_folder, '''
+filename_sync: 1
+filename_not_sync: 2
+        ''')
+        dot_folder = os.path.join(self.plain_folder, ".syncrypto")
+        if not os.path.exists(dot_folder):
+            os.mkdir(dot_folder)
+        with open(os.path.join(dot_folder, "rules"), 'wb') as f:
+            f.write(b'exclude: name match *_not_sync')
+        syncrypto_cmd(["--password", self.password,
+                       self.encrypted_folder, self.plain_folder])
+        syncrypto_cmd(["--password", self.password,
+                       self.encrypted_folder, self.plain_folder_check])
+        directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
+        self.assertEqual(len(directory_cmp.right_only), 0)
+        self.assertEqual(len(directory_cmp.diff_files), 0)
+
+    def testEncryptedFileName(self):
+        self.clearFolders()
+        prepare_filetree(self.plain_folder, '''
+normal: hello
+normal_folder/file: hello
+211: 1
+117/hello: 2
+        ''')
+        self.checkResultAfterSync()
 
 #     def testChangePassword(self):
 #         self.clearFolders()

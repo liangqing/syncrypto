@@ -17,9 +17,9 @@ from stat import *
 from .crypto import Crypto, UnrecognizedContent
 from .filetree import FileTree, FileRuleSet
 try:
-    from cStringIO import StringIO
+    from cStringIO import StringIO as BytesIO
 except ImportError:
-    from io import BytesIO as StringIO
+    from io import BytesIO
 
 
 class GenerateEncryptedFilePathError(Exception):
@@ -27,6 +27,10 @@ class GenerateEncryptedFilePathError(Exception):
 
 
 class ChangeTheSamePassword(Exception):
+    pass
+
+
+class InvalidFolder(Exception):
     pass
 
 
@@ -46,18 +50,13 @@ class Syncrypto:
         self._debug = debug
 
         if not os.path.isdir(self.encrypted_folder):
-            raise Exception("encrypted folder path is not correct: " +
-                            self.encrypted_folder)
+            raise InvalidFolder("encrypted folder path is not correct: " +
+                                self.encrypted_folder)
 
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
-                raise Exception("plaintext folder path is not correct: " +
-                                self.plain_folder)
-            if self.snapshot_tree is None:
-                self._load_snapshot_tree()
-
-            if self.plain_tree is None:
-                self._load_plain_tree()
+                raise InvalidFolder("plaintext folder path is not correct: " +
+                                    self.plain_folder)
 
             if self.rule_set is None:
                 self.rule_set = FileRuleSet()
@@ -66,11 +65,18 @@ class Syncrypto:
                 rule_file = self._rule_path()
 
             if os.path.exists(rule_file):
-                for line in open(rule_file):
-                    line = line.strip()
-                    if line == "" or line[0] == '#':
-                        continue
-                    self.rule_set.add_rule_by_string(line)
+                with open(rule_file, 'rb') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line == "" or line[0] == '#':
+                            continue
+                        self.rule_set.add_rule_by_string(line.decode("ascii"))
+
+            if self.snapshot_tree is None:
+                self._load_snapshot_tree()
+
+            if self.plain_tree is None:
+                self._load_plain_tree()
 
         if self.encrypted_tree is None:
             self._load_encrypted_tree()
@@ -222,12 +228,12 @@ class Syncrypto:
     def _save_trees(self):
         fp = open(self._encrypted_tree_path(), "wb")
         self.crypto.encrypt_fd(
-            StringIO(json.dumps(self.encrypted_tree.to_dict()).encode("utf-8")),
+            BytesIO(json.dumps(self.encrypted_tree.to_dict()).encode("utf-8")),
             fp, None, Crypto.COMPRESS)
         fp.close()
         fp = open(self._snapshot_tree_path(), 'wb')
         self.crypto.compress_fd(
-            StringIO(json.dumps(self.snapshot_tree.to_dict()).encode("utf-8")),
+            BytesIO(json.dumps(self.snapshot_tree.to_dict()).encode("utf-8")),
             fp)
         fp.close()
 
@@ -238,7 +244,7 @@ class Syncrypto:
         else:
             fp = open(encrypted_tree_path, "rb")
             try:
-                tree_fd = StringIO()
+                tree_fd = BytesIO()
                 self.crypto.decrypt_fd(fp, tree_fd)
                 tree_fd.seek(0)
                 self.encrypted_tree = FileTree.from_dict(
@@ -259,7 +265,7 @@ class Syncrypto:
         else:
             fp = open(snapshot_tree_path, "rb")
             try:
-                tree_fd = StringIO()
+                tree_fd = BytesIO()
                 self.crypto.decompress_fd(fp, tree_fd)
                 tree_fd.seek(0)
                 self.snapshot_tree = FileTree.from_dict(
@@ -373,7 +379,7 @@ class Syncrypto:
 
             self.crypto.password = oldpass
             fp = open(fs_path, 'rb')
-            string = StringIO()
+            string = BytesIO()
             self.crypto.decrypt_fd(fp, string)
             fp.close()
 
