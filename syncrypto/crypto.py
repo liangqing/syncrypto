@@ -150,7 +150,7 @@ class Crypto:
             pathname_padding = padding_length * b'\0'
 
         flags &= 0xFF
-        out_fd.write(pack(b'cc', self.VERSION, flags))
+        out_fd.write(pack(b'BB', self.VERSION, flags))
         out_fd.write(pack(b'!H', pathname_size))
         out_fd.write(file_entry.salt)
         out_fd.write(encryptor.update(pathname+pathname_padding))
@@ -168,7 +168,7 @@ class Crypto:
             md5.update(chunk)
             if len(chunk) == 0 or len(chunk) % bs != 0:
                 padding_length = (bs - len(chunk) % bs) or bs
-                chunk += padding_length * pack(b'c', padding_length)
+                chunk += padding_length * pack(b'B', padding_length)
                 finished = True
             out_fd.write(encryptor.update(chunk))
 
