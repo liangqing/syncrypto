@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
-
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from six import iteritems
+import binascii
 import os
 import os.path
 import re
-from cStringIO import StringIO 
 from datetime import datetime
 import time
 from fnmatch import fnmatch
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 class InvalidRuleString(Exception):
@@ -32,9 +39,9 @@ class FileEntry:
         s = StringIO()
         t = datetime.fromtimestamp(self.mtime)
         if self.isdir:
-            print >>s, 'directory', self.pathname, ':', t, self.fs_pathname,
+            print('directory', self.pathname, ':', t, self.fs_pathname, file=s)
         else:
-            print >>s, 'file', self.pathname, ':', t, self.fs_pathname,
+            print('file', self.pathname, ':', t, self.fs_pathname, file=s)
         return s.getvalue()
 
     def name(self):
@@ -57,14 +64,14 @@ class FileEntry:
         for k in FileEntry.properties():
             v = getattr(self, k)
             if v is not None and (k == 'digest' or k == 'salt'):
-                d[k] = v.encode('hex')
+                d[k] = binascii.hexlify(v).decode('utf-8')
             else:
                 d[k] = v
         return d
 
     def clone(self):
         return FileEntry(self.pathname, self.size, self.ctime, self.mtime,
-                    self.mode, self.digest, self.isdir, self.fs_pathname)
+                         self.mode, self.digest, self.isdir, self.fs_pathname)
 
     def copy_attr_from(self, target):
         self.isdir = target.isdir
@@ -78,9 +85,9 @@ class FileEntry:
     @classmethod
     def from_dict(cls, d):
         if 'digest' in d and d['digest'] is not None:
-            d['digest'] = d['digest'].decode('hex')
+            d['digest'] = binascii.unhexlify(d['digest'])
         if 'salt' in d and d['salt'] is not None:
-            d['salt'] = d['salt'].decode('hex')
+            d['salt'] = binascii.unhexlify(d['salt'])
         return cls(**d)
 
     @classmethod
@@ -250,18 +257,18 @@ class FileTree:
             self._table = {}
 
     def pathnames(self):
-        return self._table.keys()
+        return list(self._table)
 
     def files(self):
         files = []
-        for pathname, f in self._table.iteritems():
+        for pathname, f in iteritems(self._table):
             if not f.isdir:
                 files.append(f)
         return files
 
     def folders(self):
         folders = []
-        for pathname, f in self._table.iteritems():
+        for pathname, f in iteritems(self._table):
             if f.isdir:
                 folders.append(f)
         return folders 
@@ -312,13 +319,13 @@ class FileTree:
     def __str__(self):
         table = self._table
         s = StringIO()
-        for key, item in table.iteritems():
-            print >>s, "\t", item
+        for key, item in iteritems(table):
+            print("\t", item, file=s)
         return s.getvalue()
 
     def to_dict(self):
         table = {}
-        for pathname, f in self._table.iteritems():
+        for pathname, f in iteritems(self._table):
             if f is not None:
                 table[pathname] = f.to_dict()
         return {
@@ -336,6 +343,6 @@ class FileTree:
         table = {}
         if 'table' in d:
             t = d['table']
-            for pathname, f in t.iteritems():
+            for pathname, f in iteritems(t):
                 table[pathname] = FileEntry.from_dict(f)
         return cls(table)

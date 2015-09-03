@@ -1,17 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from six import iteritems
+from io import open
 import unittest
-
 import os
 import os.path
 import shutil
 from tempfile import mkstemp, mkdtemp
-from syncrypto import FileEntry, FileRule, FileRuleSet, FileTree, Crypto, Syncrypto
+from syncrypto import FileEntry, FileRule, FileRuleSet, FileTree, Crypto, \
+    Syncrypto
 from syncrypto import cmd as syncrypto_cmd
 from time import time, strftime, localtime, sleep
-from cStringIO import StringIO 
 from filecmp import dircmp
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 
 def format_datetime(t):
@@ -32,9 +39,9 @@ def clear_folder(folder):
 def print_folder(folder):
     for root, dirs, files in os.walk(folder):
         for d in dirs:
-            print root + "/" +d
+            print(root + "/" +d)
         for f in files:
-            print root + "/" + f
+            print(root + "/" + f)
 
 
 def prepare_filetree(root, tree_string):
@@ -57,7 +64,7 @@ def prepare_filetree(root, tree_string):
         if not os.path.exists(directory):
             os.makedirs(directory)
         fp = open(path, 'wb')
-        fp.write(content)
+        fp.write(content.encode("utf-8"))
         fp.close()
 
 
@@ -93,7 +100,7 @@ class FileEntryTestCase(unittest.TestCase):
 
     def test_to_dict(self):
         d = self.file_object.to_dict()
-        for k, v in self.file_attrs.iteritems():
+        for k, v in iteritems(self.file_attrs):
             self.assertEqual(d[k], v)
 
     def test_from_file(self):
@@ -304,7 +311,7 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = StringIO()
         middle_fd = StringIO()
         out_fd = StringIO()
-        in_fd.write("hello")
+        in_fd.write("hello".encode("utf-8"))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry)
         middle_fd.seek(0)
@@ -326,7 +333,7 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = StringIO()
         out_fd1 = StringIO()
         out_fd2 = StringIO()
-        in_fd.write("hello")
+        in_fd.write("hello".encode("utf-8"))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, out_fd1, self.file_entry)
         in_fd.seek(0)
@@ -403,7 +410,7 @@ dir2/file2
     def testAddFile(self):
         path = self.plain_folder + os.path.sep + "add_file"
         fp = open(path, "wb")
-        fp.write("hello world")
+        fp.write(b"hello world")
         fp.close()
         self.plain_tree = FileTree.from_fs(self.plain_folder)
         self.isPass()
@@ -411,14 +418,14 @@ dir2/file2
     def testAddFileAndModify(self):
         path = self.plain_folder + os.path.sep + "add_file_and_modify"
         fp = open(path, "wb")
-        fp.write("hello world")
+        fp.write(b"hello world")
         fp.close()
         self.plain_tree = FileTree.from_fs(self.plain_folder)
         self.isPass()
 
         path = self.plain_folder + os.path.sep + "add_file_and_modify"
         fp = open(path, "wb")
-        fp.write("hello world again")
+        fp.write(b"hello world again")
         fp.close()
         self.plain_tree = FileTree.from_fs(self.plain_folder)
         self.plain_tree.get("add_file_and_modify").mtime += 1
@@ -428,7 +435,7 @@ dir2/file2
         path = self.plain_tree.get("sync_file_modify").fs_path(
             self.plain_folder)
         fp = open(path, "wb")
-        fp.write("hello world again")
+        fp.write(b"hello world again")
         fp.close()
         self.plain_tree = FileTree.from_fs(self.plain_folder)
         self.plain_tree.get("sync_file_modify").mtime += 1
@@ -438,7 +445,7 @@ dir2/file2
         path = self.plain_tree.get("sync/file/modify").fs_path(
             self.plain_folder)
         fp = open(path, "wb")
-        fp.write("hello world again")
+        fp.write(b"hello world again")
         fp.close()
         self.plain_tree = FileTree.from_fs(self.plain_folder)
         self.plain_tree.get("sync/file/modify").mtime += 1
@@ -506,12 +513,12 @@ class CmdTestCase(unittest.TestCase):
     def modifyFile(self, folder, pathname, content):
         sleep(1)
         fd = open(folder+os.path.sep+pathname, 'wb')
-        fd.write(content)
+        fd.write(content.encode("utf-8"))
         fd.close()
 
     def addFile(self, folder, pathname, content):
         fd = open(folder+os.path.sep+pathname, 'wb')
-        fd.write(content)
+        fd.write(content.encode("utf-8"))
         fd.close()
 
     def addFolder(self, folder, pathname):

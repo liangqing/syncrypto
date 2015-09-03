@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
-
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from io import open
 import os
 import sys
 import os.path
@@ -11,9 +14,12 @@ from datetime import datetime
 from time import sleep
 from getpass import getpass
 from stat import *
-from crypto import Crypto, UnrecognizedContent
-from filetree import FileTree, FileRuleSet
-from cStringIO import StringIO
+from .crypto import Crypto, UnrecognizedContent
+from .filetree import FileTree, FileRuleSet
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 
 class GenerateEncryptedFilePathError(Exception):
@@ -71,15 +77,15 @@ class Syncrypto:
 
     def debug(self, message):
         if self._debug:
-            print "[DEBUG]", message
+            print("[DEBUG]", message)
 
     @staticmethod
     def info(message):
-        print message
+        print(message)
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
-        md5 = hashlib.md5(name).hexdigest()
+        md5 = hashlib.md5(name.encode("utf-8")).hexdigest()
         i = 2
         while True:
             if dirname == '':
@@ -202,7 +208,7 @@ class Syncrypto:
         return self._plain_folder_path("rules")
 
     def _snapshot_tree_path(self):
-        md5 = hashlib.md5(self.encrypted_folder).hexdigest()
+        md5 = hashlib.md5(self.encrypted_folder.encode("utf-8")).hexdigest()
         return self._plain_folder_path(md5+'.filetree')
 
     def _plain_folder_path(self, sub_file):
@@ -216,12 +222,13 @@ class Syncrypto:
     def _save_trees(self):
         fp = open(self._encrypted_tree_path(), "wb")
         self.crypto.encrypt_fd(
-            StringIO(json.dumps(self.encrypted_tree.to_dict())),
+            StringIO(json.dumps(self.encrypted_tree.to_dict()).encode("utf-8")),
             fp, None, Crypto.COMPRESS)
         fp.close()
         fp = open(self._snapshot_tree_path(), 'wb')
         self.crypto.compress_fd(
-            StringIO(json.dumps(self.snapshot_tree.to_dict())), fp)
+            StringIO(json.dumps(self.snapshot_tree.to_dict()).encode("utf-8")),
+            fp)
         fp.close()
 
     def _load_encrypted_tree(self):
@@ -234,7 +241,8 @@ class Syncrypto:
                 tree_fd = StringIO()
                 self.crypto.decrypt_fd(fp, tree_fd)
                 tree_fd.seek(0)
-                self.encrypted_tree = FileTree.from_dict(json.load(tree_fd))
+                self.encrypted_tree = FileTree.from_dict(
+                    json.loads(tree_fd.getvalue().decode("utf-8")))
             except UnrecognizedContent:
                 self.encrypted_tree = FileTree()
             finally:
@@ -254,7 +262,8 @@ class Syncrypto:
                 tree_fd = StringIO()
                 self.crypto.decompress_fd(fp, tree_fd)
                 tree_fd.seek(0)
-                self.snapshot_tree = FileTree.from_dict(json.load(tree_fd))
+                self.snapshot_tree = FileTree.from_dict(
+                    json.loads(tree_fd.getvalue().decode("utf-8")))
             except UnrecognizedContent:
                 self.snapshot_tree = FileTree()
             finally:
@@ -392,7 +401,7 @@ class Syncrypto:
 
 def main(args=sys.argv[1:]):
 
-    from cli import parser
+    from .cli import parser
 
     args = parser.parse_args(args=args)
 
@@ -419,9 +428,9 @@ def main(args=sys.argv[1:]):
             newpass1 = getpass('please input the new password:')
             newpass2 = getpass('please re input the new password:')
             if len(newpass1) < 6:
-                print "new password is too short"
+                print("new password is too short")
             elif newpass1 != newpass2:
-                print "two inputs are not match"
+                print("two inputs are not match")
             else:
                 break
         syncrypto.change_password(newpass1)
@@ -430,7 +439,7 @@ def main(args=sys.argv[1:]):
         syncrypto.clear_encrypted_folder()
         return 0
     elif args.print_encrypted_tree:
-        print syncrypto.encrypted_tree
+        print(syncrypto.encrypted_tree)
         return 0
     elif args.plaintext_folder:
         if args.interval:

@@ -1,19 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
-
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import division
+import binascii
+from six import byte2int, int2byte
+from io import open
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import os
-from cStringIO import StringIO 
 import zlib
 import hashlib
 from struct import pack, unpack
-from filetree import FileEntry
+from .filetree import FileEntry
 from time import time
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 
 def _hex(data):
-    return data.encode('hex')
+    return binascii.hexlify(data)
 
 
 class InvalidKey(Exception):
@@ -42,7 +51,7 @@ class Crypto:
 
     def __init__(self, password, key_size=32):
 
-        self.password = password
+        self.password = password.encode("latin-1")
         self.key_size = key_size
         self.block_size = 16
 
@@ -63,14 +72,15 @@ class Crypto:
 
     @staticmethod
     def compress_fd(in_fd, out_fd):
-        out_fd.write(zlib.compress(in_fd.read()))
+        data = zlib.compress(in_fd.read())
+        out_fd.write(data)
 
     @staticmethod
     def decompress_fd(in_fd, out_fd):
         out_fd.write(zlib.decompress(in_fd.read()))
 
     def gen_key_and_iv(self, salt):
-        d = d_i = ''
+        d = d_i = b''
         while len(d) < self.key_size + self.block_size:
             d_i = hashlib.md5(d_i + self.password + salt).digest()
             d += d_i
@@ -88,7 +98,7 @@ class Crypto:
         header_padding = ''
         if header_size % bs != 0:
             padding_length = (bs - header_size % bs)
-            header_padding = padding_length * chr(0)
+            header_padding = padding_length * b'\0'
         return header_size, header_padding, pathname
 
     @staticmethod
@@ -97,7 +107,7 @@ class Crypto:
                pack('!Q', file_entry.size) + \
                pack('!I', int(file_entry.ctime)) + \
                pack('!I', int(file_entry.mtime)) + \
-               pack('!i', file_entry.mode) + (12 * chr(0))
+               pack('!i', file_entry.mode) + (12 * b'\0')
 
     @staticmethod
     def _unpack_footer(pathname, footer):
@@ -110,12 +120,12 @@ class Crypto:
             +-----------------------------------------------------+
             | Version(1) | Flags(1) | Pathname size(2) | Salt(12) |
             +-----------------------------------------------------+
-            |                   Encrypted Pathname                |
+            |                  Encrypted Pathname                 |
             +-----------------------------------------------------+
-            |                   Encrypted Content                 |
-            |                         ...                         |
+            |                  Encrypted Content                  |
+            |                        ...                          |
             +-----------------------------------------------------+
-            |                   Encrypted Digest(16)              |
+            |                  Encrypted Digest(16)               |
             +-----------------------------------------------------+
             |         size(8)*        |   ctime(4)   |   mtime(4) |
             +-----------------------------------------------------+
@@ -133,16 +143,16 @@ class Crypto:
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
                         backend=default_backend())
         encryptor = cipher.encryptor()
-        pathname = file_entry.pathname[:2**16]
+        pathname = file_entry.pathname.encode("utf-8")[:2**16]
         pathname_size = len(pathname)
-        pathname_padding = ''
+        pathname_padding = b''
         if pathname_size % bs != 0:
             padding_length = (bs - pathname_size % bs)
-            pathname_padding = padding_length * chr(0)
+            pathname_padding = padding_length * b'\0'
 
         flags &= 0xFF
-        out_fd.write(chr(self.VERSION))
-        out_fd.write(chr(flags))
+        out_fd.write(int2byte(self.VERSION))
+        out_fd.write(int2byte(flags))
         out_fd.write(pack('!H', pathname_size))
         out_fd.write(file_entry.salt)
         out_fd.write(encryptor.update(pathname+pathname_padding))
@@ -160,7 +170,7 @@ class Crypto:
             md5.update(chunk)
             if len(chunk) == 0 or len(chunk) % bs != 0:
                 padding_length = (bs - len(chunk) % bs) or bs
-                chunk += padding_length * chr(padding_length)
+                chunk += padding_length * int2byte(padding_length)
                 finished = True
             out_fd.write(encryptor.update(chunk))
 
@@ -176,10 +186,10 @@ class Crypto:
             raise UnrecognizedContent(
                 "header line size is not correct, expect %d, got %d" %
                 (bs, len(line)))
-        version = ord(line[0])
+        version = byte2int(line)
         if version > self.VERSION:
             raise VersionNotCompatible("Unrecognized version: (%d)" % version)
-        flags = ord(line[1])
+        flags = byte2int(line[1:])
         (pathname_size,) = unpack('!H', line[2:4])
         salt = line[4:]
         key, iv = self.gen_key_and_iv(salt)
@@ -188,7 +198,7 @@ class Crypto:
         decryptor = cipher.decryptor()
         pathname_block_size = pathname_size
         if pathname_size % bs != 0:
-            pathname_block_size = (pathname_size/bs+1) * bs
+            pathname_block_size = int((pathname_size/bs+1) * bs)
         pathname_data = in_fd.read(pathname_block_size)
         if len(pathname_data) < pathname_block_size:
             raise UnrecognizedContent(
@@ -207,7 +217,7 @@ class Crypto:
                 if len(next_chunk) == 0:
                     plaintext += decryptor.finalize()
                     file_entry = self._unpack_footer(pathname, plaintext[-48:])
-                    padding_length = ord(plaintext[-49])
+                    padding_length = byte2int(plaintext[-49:])
                     plaintext = plaintext[:-padding_length-48]
                     finished = True
                 str_io.write(plaintext)

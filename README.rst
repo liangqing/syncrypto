@@ -92,7 +92,7 @@ the command above ignores files matching "\*.md" but includes files named "READM
 The rules are ordered, it means that the rules in front have higher priority than
 later, if a rule matches, the matching process will returned immediately.
 
-You can add rules in a file which looks like\:
+You can add rules in a file looks like\:
 
 .. code-block::
 
@@ -108,7 +108,7 @@ and use the rules by "--rule-file" option:
     syncrypto --rule-file [rule file path]
 
 the default rule file path is "[plaintext folder]/.syncrypto/rules", so you can
-add rules in "[plaintext folder]/.syncrypto/rules", but don't need specify the
+add rules in "[plaintext folder]/.syncrypto/rules", and don't need specify the
 "--rule-file" option explicitly.
 
 If you give some rules in command line, and write some rules in rule file at

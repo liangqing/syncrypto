@@ -9,7 +9,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='syncrypto',
-    version='0.0.6',
+    version='0.1.0',
     description='Synchronize a folder with its encrypted content',
     long_description=long_description,
     url='https://github.com/liangqing/syncrypto',
@@ -21,6 +21,9 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4'
         'Topic :: Communications :: File Sharing',
     ],
     packages=find_packages(),
