@@ -3,7 +3,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from six import iteritems
 import binascii
 import os
 import os.path
@@ -261,14 +260,16 @@ class FileTree:
 
     def files(self):
         files = []
-        for pathname, f in iteritems(self._table):
+        for pathname in self._table:
+            f = self._table[pathname]
             if not f.isdir:
                 files.append(f)
         return files
 
     def folders(self):
         folders = []
-        for pathname, f in iteritems(self._table):
+        for pathname in self._table:
+            f = self._table[pathname]
             if f.isdir:
                 folders.append(f)
         return folders 
@@ -319,13 +320,15 @@ class FileTree:
     def __str__(self):
         table = self._table
         s = StringIO()
-        for key, item in iteritems(table):
+        for key in table:
+            item = table[key]
             print("\t", item, file=s)
         return s.getvalue()
 
     def to_dict(self):
         table = {}
-        for pathname, f in iteritems(self._table):
+        for pathname in self._table:
+            f = self._table[pathname]
             if f is not None:
                 table[pathname] = f.to_dict()
         return {
@@ -343,6 +346,7 @@ class FileTree:
         table = {}
         if 'table' in d:
             t = d['table']
-            for pathname, f in iteritems(t):
+            for pathname in t:
+                f = t[pathname]
                 table[pathname] = FileEntry.from_dict(f)
         return cls(table)

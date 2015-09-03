@@ -3,7 +3,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from six import iteritems
 from io import open
 import unittest
 import os
@@ -100,8 +99,8 @@ class FileEntryTestCase(unittest.TestCase):
 
     def test_to_dict(self):
         d = self.file_object.to_dict()
-        for k, v in iteritems(self.file_attrs):
-            self.assertEqual(d[k], v)
+        for k in self.file_attrs:
+            self.assertEqual(d[k], self.file_attrs[k])
 
     def test_from_file(self):
         stat = os.stat(self.file_path)

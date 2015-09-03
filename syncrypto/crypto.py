@@ -5,7 +5,6 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import division
 import binascii
-from six import byte2int, int2byte
 from io import open
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -151,8 +150,7 @@ class Crypto:
             pathname_padding = padding_length * b'\0'
 
         flags &= 0xFF
-        out_fd.write(int2byte(self.VERSION))
-        out_fd.write(int2byte(flags))
+        out_fd.write(pack(b'cc', self.VERSION, flags))
         out_fd.write(pack(b'!H', pathname_size))
         out_fd.write(file_entry.salt)
         out_fd.write(encryptor.update(pathname+pathname_padding))
@@ -170,7 +168,7 @@ class Crypto:
             md5.update(chunk)
             if len(chunk) == 0 or len(chunk) % bs != 0:
                 padding_length = (bs - len(chunk) % bs) or bs
-                chunk += padding_length * int2byte(padding_length)
+                chunk += padding_length * pack(b'c', padding_length)
                 finished = True
             out_fd.write(encryptor.update(chunk))
 
@@ -186,10 +184,11 @@ class Crypto:
             raise UnrecognizedContent(
                 "header line size is not correct, expect %d, got %d" %
                 (bs, len(line)))
-        version = byte2int(line)
+        ints = bytearray(line[:2])
+        version = ints[0]
         if version > self.VERSION:
             raise VersionNotCompatible("Unrecognized version: (%d)" % version)
-        flags = byte2int(line[1:])
+        flags = ints[1]
         (pathname_size,) = unpack(b'!H', line[2:4])
         salt = line[4:]
         key, iv = self.gen_key_and_iv(salt)
@@ -217,7 +216,7 @@ class Crypto:
                 if len(next_chunk) == 0:
                     plaintext += decryptor.finalize()
                     file_entry = self._unpack_footer(pathname, plaintext[-48:])
-                    padding_length = byte2int(plaintext[-49:])
+                    padding_length = bytearray(plaintext[-49:-48])[0]
                     plaintext = plaintext[:-padding_length-48]
                     finished = True
                 str_io.write(plaintext)
