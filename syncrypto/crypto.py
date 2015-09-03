@@ -104,14 +104,14 @@ class Crypto:
     @staticmethod
     def _build_footer(file_entry):
         return file_entry.digest + \
-               pack('!Q', file_entry.size) + \
-               pack('!I', int(file_entry.ctime)) + \
-               pack('!I', int(file_entry.mtime)) + \
-               pack('!i', file_entry.mode) + (12 * b'\0')
+               pack(b'!Q', file_entry.size) + \
+               pack(b'!I', int(file_entry.ctime)) + \
+               pack(b'!I', int(file_entry.mtime)) + \
+               pack(b'!i', file_entry.mode) + (12 * b'\0')
 
     @staticmethod
     def _unpack_footer(pathname, footer):
-        (size, ctime, mtime, mode) = unpack('!QIIi', footer[16:36])
+        (size, ctime, mtime, mode) = unpack(b'!QIIi', footer[16:36])
         return FileEntry(pathname, size, ctime, mtime, mode,
                          footer[:16], False)
 
@@ -153,7 +153,7 @@ class Crypto:
         flags &= 0xFF
         out_fd.write(int2byte(self.VERSION))
         out_fd.write(int2byte(flags))
-        out_fd.write(pack('!H', pathname_size))
+        out_fd.write(pack(b'!H', pathname_size))
         out_fd.write(file_entry.salt)
         out_fd.write(encryptor.update(pathname+pathname_padding))
 
@@ -190,7 +190,7 @@ class Crypto:
         if version > self.VERSION:
             raise VersionNotCompatible("Unrecognized version: (%d)" % version)
         flags = byte2int(line[1:])
-        (pathname_size,) = unpack('!H', line[2:4])
+        (pathname_size,) = unpack(b'!H', line[2:4])
         salt = line[4:]
         key, iv = self.gen_key_and_iv(salt)
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
