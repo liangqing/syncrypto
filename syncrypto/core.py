@@ -219,8 +219,6 @@ class Syncrypto:
 
     def _plain_folder_path(self, sub_file):
         filename = ".syncrypto"
-        if os.name == 'nt':
-            filename = "_syncrypto"
         path = os.path.join(self.plain_folder, filename, sub_file)
         self._ensure_dir(path)
         return path
@@ -420,7 +418,7 @@ def main(args=sys.argv[1:]):
             rule_set.add_rule_by_string(rule_string)
 
     if not password:
-        password = getpass('please input the password:')
+        password = getpass('Please input the password:')
 
     crypto = Crypto(password)
 
@@ -431,8 +429,8 @@ def main(args=sys.argv[1:]):
     if args.change_password:
         newpass1 = None
         while True:
-            newpass1 = getpass('please input the new password:')
-            newpass2 = getpass('please re input the new password:')
+            newpass1 = getpass('Please input the new password:')
+            newpass2 = getpass('Please re input the new password:')
             if len(newpass1) < 6:
                 print("new password is too short")
             elif newpass1 != newpass2:

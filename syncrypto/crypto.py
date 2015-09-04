@@ -54,10 +54,10 @@ class Crypto:
         self.key_size = key_size
         self.block_size = 16
 
-    def encrypt_file(self, plain_path, encrypted_path, plain_file):
+    def encrypt_file(self, plain_path, encrypted_path, plain_file_entry):
         plain_fd = open(plain_path, 'rb')
         encrypted_fd = open(encrypted_path, 'wb')
-        self.encrypt_fd(plain_fd, encrypted_fd, plain_file)
+        self.encrypt_fd(plain_fd, encrypted_fd, plain_file_entry)
         plain_fd.close()
         encrypted_fd.close()
 
@@ -84,21 +84,6 @@ class Crypto:
             d_i = hashlib.md5(d_i + self.password + salt).digest()
             d += d_i
         return d[:self.key_size], d[self.key_size:self.key_size+self.block_size]
-
-    def _header_size(self, file_entry):
-        bs = self.block_size
-        pathname = file_entry.pathname
-        pathname_size = len(pathname)
-        max_pathname = 2 ** 16 - 36
-        if pathname_size > max_pathname:
-            pathname = pathname[-max_pathname:]
-            pathname_size = max_pathname
-        header_size = pathname_size + 36
-        header_padding = ''
-        if header_size % bs != 0:
-            padding_length = (bs - header_size % bs)
-            header_padding = padding_length * b'\0'
-        return header_size, header_padding, pathname
 
     @staticmethod
     def _build_footer(file_entry):

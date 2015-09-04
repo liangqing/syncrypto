@@ -173,6 +173,14 @@ class FileRuleTestCase(unittest.TestCase):
         self.assertEqual(f1.test(self.file_entry), 'exclude')
         self.assertEqual(f2.test(self.file_entry), None)
 
+    def test_gte(self):
+        f1 = FileRule('mtime', 'gte',
+                      format_datetime(time()-3600), 'exclude')
+        f2 = FileRule('mtime', 'gte',
+                      format_datetime(time()+3600), 'exclude')
+        self.assertEqual(f1.test(self.file_entry), 'exclude')
+        self.assertEqual(f2.test(self.file_entry), None)
+
     def test_lte(self):
         self.file_entry.ctime = int(self.file_entry.ctime)
         f1 = FileRule('ctime', 'lte',
@@ -316,6 +324,21 @@ class CryptoTestCase(unittest.TestCase):
         middle_fd.seek(0)
         self.crypto.decrypt_fd(middle_fd, out_fd)
         self.assertEqual(in_fd.getvalue(), out_fd.getvalue())
+
+    def testFileApi(self):
+        fd1, file_path1 = mkstemp()
+        fd2, file_path2 = mkstemp()
+        fd3, file_path3 = mkstemp()
+        os.write(fd1, b'hello world')
+        os.close(fd1)
+        os.close(fd2)
+        os.close(fd3)
+        self.crypto.encrypt_file(file_path1, file_path2, self.file_entry)
+        self.crypto.decrypt_file(file_path2, file_path3)
+        self.assertEqual(open(file_path3, 'rb').read(), b'hello world')
+        os.remove(file_path1)
+        os.remove(file_path2)
+        os.remove(file_path3)
 
     def testLargeEncrypt(self):
         in_fd = BytesIO()

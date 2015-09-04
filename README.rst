@@ -39,6 +39,17 @@ you will get the same result in the two folders finally.
 Installation
 ============
 
+``syncrypto`` supports both python 2 and python 3, and is tested_ in:
+
+.. _tested: https://travis-ci.org/liangqing/syncrypto
+
+* python 2.6
+* python 2.7
+* python 3.3
+* python 3.4
+
+you can install it only by:
+
 .. code-block:: bash
 
     pip install syncrypto
