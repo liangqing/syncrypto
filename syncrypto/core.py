@@ -50,14 +50,19 @@ class Syncrypto:
         self._debug = debug
 
         if not os.path.isdir(self.encrypted_folder):
-            raise InvalidFolder("encrypted folder path is not correct: " +
-                                self.encrypted_folder)
+            if os.path.exists(self.encrypted_folder):
+                raise InvalidFolder("encrypted folder path is not correct: " +
+                                    self.encrypted_folder)
+            else:
+                os.makedirs(self.encrypted_folder)
 
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
-                raise InvalidFolder("plaintext folder path is not correct: " +
-                                    self.plain_folder)
-
+                if os.path.exists(self.plain_folder):
+                    raise InvalidFolder("plaintext folder path is not correct: "
+                                        + self.plain_folder)
+                else:
+                    os.makedirs(self.plain_folder)
             if self.rule_set is None:
                 self.rule_set = FileRuleSet()
 
@@ -418,7 +423,7 @@ def main(args=sys.argv[1:]):
             rule_set.add_rule_by_string(rule_string)
 
     if not password:
-        password = getpass('Please input the password:')
+        password = getpass(b'Please input the password:')
 
     crypto = Crypto(password)
 
@@ -429,8 +434,8 @@ def main(args=sys.argv[1:]):
     if args.change_password:
         newpass1 = None
         while True:
-            newpass1 = getpass('Please input the new password:')
-            newpass2 = getpass('Please re input the new password:')
+            newpass1 = getpass(b'Please input the new password:')
+            newpass2 = getpass(b'Please re input the new password:')
             if len(newpass1) < 6:
                 print("new password is too short")
             elif newpass1 != newpass2:

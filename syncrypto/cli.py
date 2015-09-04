@@ -66,3 +66,9 @@ parser.add_argument(
     action="store_true",
     help='Debug mode'
 )
+
+parser.add_argument(
+    '-v',
+    '--version',
+    help='Display the version'
+)
