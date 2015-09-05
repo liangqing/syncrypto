@@ -14,7 +14,7 @@ Synchronize a folder with its encrypted content
 Introduction
 ============
 You can use ``syncrypto`` to encrypt a folder to another folder which contains the
-corresponding encrypted content of the files within former.
+corresponding encrypted content.
 
 The most common scenario is\:
 
@@ -24,17 +24,18 @@ The most common scenario is\:
   plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
 
 The files in encrypted folder B are encrypted, so you can store it in any unsafe
-environment, such as Cloud service(Dropbox/OneDrive), USB storage or any other
-storage that you can not controlled.
+environment, such as cloud service(Dropbox/OneDrive), USB storage or any other
+storage that you can not control.
 
 Each plaintext file has a corresponding encrypted file in the encrypted folder,
-so if you modify one file in plaintext folder, there will be only one file be
-modified in the encrypted folder. This make sure the synchronization changes the
-necessary files in encrypted folder.
+so if you modify one file in plaintext folder, there will be only one file
+modified in the encrypted folder. This make sure the synchronization only changes
+the necessary content in encrypted folder, and is very useful for file based
+cloud storage service to synchronizing minimal files.
 
 The synchronization is bidirectional, every time you synchronize two folders
 (one is plaintext folder, another is encrypted folder) with ``syncrypto``,
-you will get the same result in the two folders finally.
+you will get the same result in the two folders eventually.
 
 Installation
 ============
@@ -69,16 +70,9 @@ it will prompt you to input a password, if the encrypted folder is empty,
 the input password will be set to the encrypted folder, or it will be used
 to verify the password you set before.
 
+Notice that the first argument is encrypted folder, and the second one is
+plaintext folder
 
-
-Change the password
--------------------
-
-.. code-block:: bash
-
-    syncrypto --change-password [encrypted folder]
-
-change the password of the encrypted folder
 
 Add rule for Synchronization
 ----------------------------
@@ -126,6 +120,17 @@ If you give some rules in command line, and write some rules in rule file at
 the same time, the rules in command line will have higher priority than rules
 in file.
 
+
+Change the password
+-------------------
+
+.. code-block:: bash
+
+    syncrypto --change-password [encrypted folder]
+
+change the password of the encrypted folder
+
+
 Show the help
 -------------
 
@@ -137,4 +142,4 @@ Show the help
 License
 =======
 
-Apache License
+Apache License 2.0

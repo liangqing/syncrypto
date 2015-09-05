@@ -38,7 +38,7 @@ def clear_folder(folder):
 def print_folder(folder):
     for root, dirs, files in os.walk(folder):
         for d in dirs:
-            print(root + "/" +d)
+            print(root + "/" + d)
         for f in files:
             print(root + "/" + f)
 
@@ -259,7 +259,8 @@ class FileRuleSetTestCase(unittest.TestCase):
     def testDefaultAction(self):
         rule_set = FileRuleSet()
         rule_set.add_rule_by_string("exclude: size > 1024000")
-        self.assertEqual(rule_set.test(self.file_entry), rule_set.default_action)
+        self.assertEqual(rule_set.test(self.file_entry),
+                         rule_set.default_action)
         rule_set = FileRuleSet(default_action="laf")
         rule_set.add_rule_by_string("exclude: size > 1024000")
         self.assertEqual(rule_set.test(self.file_entry), "laf")

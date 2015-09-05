@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import division
-import binascii
 from io import open
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -18,10 +17,6 @@ try:
 except ImportError:
     from io import BytesIO
 from .filetree import FileEntry
-
-
-def _hex(data):
-    return binascii.hexlify(data).decode('utf-8')
 
 
 class InvalidKey(Exception):
