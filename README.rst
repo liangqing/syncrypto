@@ -77,8 +77,7 @@ plaintext folder
 Add rule for Synchronization
 ----------------------------
 
-If you want ignore files while synchronizing, you can add rule to do that,
-such as\:
+If you want ignore files while synchronizing, you can add rule\:
 
 .. code-block:: bash
 
@@ -142,4 +141,4 @@ Show the help
 License
 =======
 
-Apache License 2.0
+Apache License

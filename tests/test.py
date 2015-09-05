@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Copyright 2015 Qing Liang (https://github.com/liangqing)
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
@@ -11,7 +26,7 @@ import shutil
 from tempfile import mkstemp, mkdtemp
 from syncrypto import FileEntry, FileRule, FileRuleSet, FileTree, Crypto, \
     Syncrypto, InvalidFolder
-from syncrypto import cmd as syncrypto_cmd
+from syncrypto import cli as syncrypto_cli
 from time import time, strftime, localtime, sleep
 from filecmp import dircmp
 try:
@@ -495,7 +510,7 @@ dir2/file2
         self.isPass()
 
 
-class CmdTestCase(unittest.TestCase):
+class CliTestCase(unittest.TestCase):
 
     def setUp(self):
         self.plain_folder = mkdtemp()
@@ -515,16 +530,16 @@ class CmdTestCase(unittest.TestCase):
         self.assertEqual(len(directory_cmp.diff_files), 0)
 
     def checkResultAfterSync(self):
-        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+        syncrypto_cli(["--password", self.password, self.encrypted_folder,
                        self.plain_folder])
-        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+        syncrypto_cli(["--password", self.password, self.encrypted_folder,
                        self.plain_folder_check])
         self.checkResult()
 
     def checkResultAfterSyncFromCheckFolder(self):
-        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+        syncrypto_cli(["--password", self.password, self.encrypted_folder,
                        self.plain_folder_check])
-        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+        syncrypto_cli(["--password", self.password, self.encrypted_folder,
                        self.plain_folder])
         self.checkResult()
 
@@ -560,7 +575,7 @@ class CmdTestCase(unittest.TestCase):
         invalid_folder = self.encrypted_folder+os.path.sep+"invalid_folder"
         with open(invalid_folder, 'wb') as f:
             f.write(b'Test')
-        syncrypto_cmd(["--password", self.password,
+        syncrypto_cli(["--password", self.password,
                        invalid_folder,
                        self.plain_folder])
         os.remove(invalid_folder)
@@ -569,7 +584,7 @@ class CmdTestCase(unittest.TestCase):
         invalid_folder = self.plain_folder+os.path.sep+"invalid_folder"
         with open(invalid_folder, 'wb') as f:
             f.write(b'Test')
-        syncrypto_cmd(["--password", self.password, self.encrypted_folder,
+        syncrypto_cli(["--password", self.password, self.encrypted_folder,
                        invalid_folder])
         os.remove(invalid_folder)
 
@@ -781,10 +796,10 @@ non_empty_folder2/in/sub/folder/file: test 2
 filename_sync: 1
 filename_not_sync: 2
         ''')
-        syncrypto_cmd(["--password", self.password,
+        syncrypto_cli(["--password", self.password,
                        "--rule", "exclude: name match *_not_sync",
                        self.encrypted_folder, self.plain_folder])
-        syncrypto_cmd(["--password", self.password,
+        syncrypto_cli(["--password", self.password,
                        self.encrypted_folder, self.plain_folder_check])
         directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
@@ -802,9 +817,9 @@ filename_not_sync: 2
             os.mkdir(dot_folder)
         with open(os.path.join(dot_folder, "rules"), 'wb') as f:
             f.write(b'exclude: name match *_not_sync')
-        syncrypto_cmd(["--password", self.password,
+        syncrypto_cli(["--password", self.password,
                        self.encrypted_folder, self.plain_folder])
-        syncrypto_cmd(["--password", self.password,
+        syncrypto_cli(["--password", self.password,
                        self.encrypted_folder, self.plain_folder_check])
         directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
@@ -831,7 +846,7 @@ normal_folder/file: hello
 # non_empty_folder1/file: test 1
 # non_empty_folder2/in/sub/folder/file: test 2
 #         ''')
-#         syncrypto_cmd(["--password", self.password,
+#         syncrypto_cli(["--password", self.password,
 #                        "--change-password", self.encrypted_folder])
 
 if __name__ == '__main__':

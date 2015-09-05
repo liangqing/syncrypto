@@ -59,8 +59,9 @@ class Syncrypto:
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
                 if os.path.exists(self.plain_folder):
-                    raise InvalidFolder("plaintext folder path is not correct: "
-                                        + self.plain_folder)
+                    raise InvalidFolder(
+                        "plaintext folder path is not correct: " +
+                        self.plain_folder)
                 else:
                     os.makedirs(self.plain_folder)
             if self.rule_set is None:
