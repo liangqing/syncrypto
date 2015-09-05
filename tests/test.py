@@ -556,13 +556,21 @@ class CmdTestCase(unittest.TestCase):
         os.rename(folder+os.path.sep+pathname, folder+os.path.sep+pathname2)
 
     def passInvalidEncryptedFolder(self):
+        invalid_folder = self.encrypted_folder+os.path.sep+"invalid_folder"
+        with open(invalid_folder, 'wb') as f:
+            f.write(b'Test')
         syncrypto_cmd(["--password", self.password,
-                       self.encrypted_folder+os.path.sep+"invalid_folder",
+                       invalid_folder,
                        self.plain_folder])
+        os.remove(invalid_folder)
 
     def passInvalidPlaintextFolder(self):
+        invalid_folder = self.plain_folder+os.path.sep+"invalid_folder"
+        with open(invalid_folder, 'wb') as f:
+            f.write(b'Test')
         syncrypto_cmd(["--password", self.password, self.encrypted_folder,
-                       self.plain_folder+os.path.sep+"invalid_folder"])
+                       invalid_folder])
+        os.remove(invalid_folder)
 
     def testFalseDirectory(self):
         self.assertRaises(InvalidFolder, self.passInvalidEncryptedFolder)
