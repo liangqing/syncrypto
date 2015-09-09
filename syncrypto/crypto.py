@@ -12,10 +12,7 @@ import zlib
 import hashlib
 from struct import pack, unpack
 from time import time
-try:
-    from cStringIO import StringIO as BytesIO
-except ImportError:
-    from io import BytesIO
+from io import BytesIO
 from .filetree import FileEntry
 
 
@@ -41,7 +38,7 @@ class Crypto:
 
     COMPRESS = 0x1
 
-    BUFFER_SIZE = 1024
+    BUFFER_SIZE = 1024 * 16
 
     def __init__(self, password, key_size=32):
 
@@ -66,12 +63,25 @@ class Crypto:
 
     @staticmethod
     def compress_fd(in_fd, out_fd):
-        data = zlib.compress(in_fd.read())
-        out_fd.write(data)
+        compress_obj = zlib.compressobj()
+        while True:
+            data = in_fd.read(Crypto.BUFFER_SIZE)
+            if len(data) > 0:
+                out_fd.write(compress_obj.compress(data))
+            else:
+                break
+        out_fd.write(compress_obj.flush())
 
     @staticmethod
     def decompress_fd(in_fd, out_fd):
-        out_fd.write(zlib.decompress(in_fd.read()))
+        decompress_obj = zlib.decompressobj()
+        while True:
+            data = in_fd.read(Crypto.BUFFER_SIZE)
+            if len(data) > 0:
+                out_fd.write(decompress_obj.decompress(data))
+            else:
+                break
+        out_fd.write(decompress_obj.flush())
 
     def gen_key_and_iv(self, salt):
         d = d_i = b''
@@ -134,18 +144,36 @@ class Crypto:
         out_fd.write(pack(b'!H', pathname_size))
         out_fd.write(file_entry.salt)
         out_fd.write(encryptor.update(pathname+pathname_padding))
-
+        compress_obj = None
         if flags & Crypto.COMPRESS:
-            buf = BytesIO()
-            self.compress_fd(in_fd, buf)
-            in_fd = buf
-            in_fd.seek(0)
+            compress_obj = zlib.compressobj()
 
         finished = False
         md5 = hashlib.md5()
+        rest = b''
         while not finished:
-            chunk = in_fd.read(Crypto.BUFFER_SIZE * bs)
-            md5.update(chunk)
+            if compress_obj is not None:
+                buf = BytesIO(rest)
+                should_read = self.BUFFER_SIZE - len(rest)
+                compress_size = 0
+                while compress_size < should_read:
+                    in_data = in_fd.read(self.BUFFER_SIZE)
+                    if len(in_data) == 0:
+                        try:
+                            buf.write(compress_obj.flush())
+                            break
+                        finally:
+                            break
+                    md5.update(in_data)
+                    compress_data = compress_obj.compress(in_data)
+                    compress_size += len(compress_data)
+                    buf.write(compress_data)
+                data = buf.getvalue()
+                chunk = data[:self.BUFFER_SIZE]
+                rest = data[self.BUFFER_SIZE:]
+            else:
+                chunk = in_fd.read(self.BUFFER_SIZE)
+                md5.update(chunk)
             if len(chunk) == 0 or len(chunk) % bs != 0:
                 padding_length = (bs - len(chunk) % bs) or bs
                 chunk += padding_length * pack(b'B', padding_length)
@@ -184,13 +212,16 @@ class Crypto:
                 "pathname length is not correct, expect %d, got %d" %
                 (pathname_block_size, len(pathname_data)))
         pathname = decryptor.update(pathname_data)[:pathname_size]
-        str_io = BytesIO()
         md5 = hashlib.md5()
         next_chunk = ''
         finished = False
         file_entry = None
+        decompress_obj = None
+        if flags & self.COMPRESS:
+            decompress_obj = zlib.decompressobj()
+
         while not finished:
-            chunk, next_chunk = next_chunk, in_fd.read(self.BUFFER_SIZE * bs)
+            chunk, next_chunk = next_chunk, in_fd.read(self.BUFFER_SIZE)
             if chunk:
                 plaintext = decryptor.update(chunk)
                 if len(next_chunk) == 0:
@@ -199,20 +230,18 @@ class Crypto:
                     padding_length = bytearray(plaintext[-49:-48])[0]
                     plaintext = plaintext[:-padding_length-48]
                     finished = True
-                str_io.write(plaintext)
+                if decompress_obj is not None:
+                    plaintext = decompress_obj.decompress(plaintext)
                 md5.update(plaintext)
-        if flags & self.COMPRESS:
-            buf = BytesIO()
-            str_io.seek(0)
-            self.decompress_fd(str_io, buf)
-            str_io.close()
-            str_io = buf
-            str_io.seek(0)
+                out_fd.write(plaintext)
+
+        if decompress_obj is not None:
+            rest = decompress_obj.flush()
+            md5.update(rest)
+            out_fd.write(rest)
 
         file_entry.salt = salt
         if file_entry.digest != md5.digest()[:bs]:
             raise DigestMissMatch()
 
-        out_fd.write(str_io.getvalue())
-        str_io.close()
         return file_entry

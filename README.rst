@@ -31,7 +31,7 @@ Each plaintext file has a corresponding encrypted file in the encrypted folder,
 so if you modify one file in plaintext folder, there will be only one file
 modified in the encrypted folder. This make sure the synchronization only changes
 the necessary content in encrypted folder, and is very useful for file based
-cloud storage service to synchronizing minimal files.
+cloud storage service to synchronizing minimal contents.
 
 The synchronization is bidirectional, every time you synchronize two folders
 (one is plaintext folder, another is encrypted folder) with ``syncrypto``,

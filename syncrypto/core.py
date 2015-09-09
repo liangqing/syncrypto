@@ -59,8 +59,9 @@ class Syncrypto:
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
                 if os.path.exists(self.plain_folder):
-                    raise InvalidFolder("plaintext folder path is not correct: "
-                                        + self.plain_folder)
+                    raise InvalidFolder(
+                        "plaintext folder path is not correct: " +
+                        self.plain_folder)
                 else:
                     os.makedirs(self.plain_folder)
             if self.rule_set is None:
@@ -178,14 +179,13 @@ class Syncrypto:
 
     def _compare_file(self, encrypted_file, plain_file, snapshot_file):
         if self._is_ignore(plain_file, encrypted_file):
-            return "exclude"
+            return "ignore"
         if plain_file is not None and encrypted_file is not None:
             if plain_file.mtime > encrypted_file.mtime:
                 return "encrypt"
             elif plain_file.mtime < encrypted_file.mtime:
                 return "decrypt"
         elif plain_file is not None:
-            # encrypted_tree.is_new or \
             if snapshot_file is None or snapshot_file.mtime < plain_file.mtime:
                 return "encrypt"
             else:
