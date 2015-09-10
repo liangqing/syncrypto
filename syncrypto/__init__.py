@@ -15,7 +15,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from .filetree import FileEntry, FileTree, FileRule, FileRuleSet
+from .filetree import FileEntry, FileTree, FileRule, FileRuleSet, \
+    InvalidRegularExpression
 from .crypto import Crypto
 from .core import Syncrypto, InvalidFolder
 from .core import main as cli

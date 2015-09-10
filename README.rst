@@ -119,14 +119,38 @@ If you give some rules in command line, and write some rules in rule file at
 the same time, the rules in command line will have higher priority than rules
 in file.
 
-``syncrypto`` supports a lot of file attributes in matching rules, the complete
+The format of a rule:
+
+.. code-block::
+
+    [action]: [file attribute] [operand] [value]
+
+``action`` can be ``include``, ``exclude``, ``ignore``
+
+``include`` means the file matching the rule will syncing, ``exclude`` means the
+file matching the rule will not syncing.
+
+``ignore`` and ``exclude`` are the same action.
+
+``syncrypto`` supports a lot of file attributes while matching rules, the complete
 list is:
 
 * ``name``, the name of the file, include file extension.
 * ``path``, the relative path from the root of the plaintext folder.
 * ``size``, the size of the file
-* ``ctime``, the create time of the file
+* ``ctime``, the creation time of the file
 * ``mtime``, the modification time of the file
+
+operands:
+
+* ``eq``, ``==``
+* ``gt``, ``>``
+* ``lt``, ``<``
+* ``gte``, ``>=``
+* ``lte``, ``<=``
+* ``ne``, ``!=``, ``<>``
+* ``match``, match by glob, for example, "*.md" matches all files end with "md"
+* ``regexp``, perform a regular expression match
 
 Change the password
 -------------------

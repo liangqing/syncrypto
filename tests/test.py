@@ -25,7 +25,7 @@ import os.path
 import shutil
 from tempfile import mkstemp, mkdtemp
 from syncrypto import FileEntry, FileRule, FileRuleSet, FileTree, Crypto, \
-    Syncrypto, InvalidFolder
+    Syncrypto, InvalidFolder, InvalidRegularExpression
 from syncrypto import cli as syncrypto_cli
 from time import time, strftime, localtime, sleep
 from filecmp import dircmp
@@ -246,6 +246,17 @@ class FileRuleTestCase(unittest.TestCase):
         self.assertEqual(f.test(self.file_entry), None)
         f = FileRule('size', '<', 100, 'include')
         self.assertEqual(f.test(self.file_entry), 'include')
+
+    def regexp_invalid(self):
+        f = FileRule('name', 'regexp', "*.txt", 'include')
+
+    def test_regexp(self):
+        self.file_entry.pathname = "test_file.txt"
+        f = FileRule('name', 'regexp', "test.*", 'include')
+        self.assertEqual(f.test(self.file_entry), 'include')
+        f = FileRule('name', 'regexp', "test*", 'include')
+        self.assertEqual(f.test(self.file_entry), None)
+        self.assertRaises(InvalidRegularExpression, self.regexp_invalid)
 
 
 class FileRuleSetTestCase(unittest.TestCase):

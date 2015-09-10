@@ -35,6 +35,10 @@ class InvalidRuleString(Exception):
     pass
 
 
+class InvalidRegularExpression(Exception):
+    pass
+
+
 class FileEntry:
 
     def __init__(self, pathname, size, ctime, mtime, mode, digest=None,
@@ -137,7 +141,7 @@ class FileRule:
     def __init__(self, attr, op, value, action):
         if op in FileRule._OP_MAP:
             op = FileRule._OP_MAP[op]
-        if op not in ['eq', 'ne', 'lt', 'lte', 'gt', 'gte', 'match']:
+        if op not in ['eq', 'ne', 'lt', 'lte', 'gt', 'gte', 'match', 'regexp']:
             raise ValueError("Unsupported file filter op: "+op)
         if attr != 'name' and attr not in self._SUPPORTED_ATTRIBUTES:
             raise ValueError("Unsupported file filter attribute: "+attr)
@@ -156,8 +160,21 @@ class FileRule:
         elif attr == 'ctime' or attr == 'mtime':
             self.value = time.mktime(datetime.strptime(
                 value, "%Y-%m-%d %H:%M:%S").timetuple())
+        elif op == 'regexp':
+            if value[0] != '^':
+                value = '^'+value
+            if value[-1] != '$':
+                value += '$'
+            try:
+                self.value = re.compile(value)
+            except Exception as e:
+                self.value = None
+            if self.value is None:
+                raise InvalidRegularExpression(
+                    "Regular expression '"+value+"' not correct")
         else:
             self.value = value
+
         self.op = op
         self.action = action
 
@@ -202,6 +219,10 @@ class FileRule:
     @staticmethod
     def match(value, pattern):
         return fnmatch(value, pattern)
+
+    @staticmethod
+    def regexp(value, regexp):
+        return regexp.match(value) is not None
 
     def to_dict(self):
         value = self.value
