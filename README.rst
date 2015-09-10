@@ -29,9 +29,9 @@ storage that you can not control.
 
 Each plaintext file has a corresponding encrypted file in the encrypted folder,
 so if you modify one file in plaintext folder, there will be only one file
-modified in the encrypted folder. This make sure the synchronization only changes
-the necessary content in encrypted folder, and is very useful for file based
-cloud storage service to synchronizing minimal contents.
+modified in the encrypted folder after synchronization. This make sure the
+synchronization only changes the necessary content in encrypted folder, and is
+very useful for file based cloud storage service to synchronizing minimal contents.
 
 The synchronization is bidirectional, every time you synchronize two folders
 (one is plaintext folder, another is encrypted folder) with ``syncrypto``,
@@ -119,6 +119,14 @@ If you give some rules in command line, and write some rules in rule file at
 the same time, the rules in command line will have higher priority than rules
 in file.
 
+``syncrypto`` supports a lot of file attributes in matching rules, the complete
+list is:
+
+* ``name``, the name of the file, include file extension.
+* ``path``, the relative path from the root of the plaintext folder.
+* ``size``, the size of the file
+* ``ctime``, the create time of the file
+* ``mtime``, the modification time of the file
 
 Change the password
 -------------------

@@ -130,18 +130,29 @@ class FileRule:
         "<>": "ne"
     }
 
+    _SUPPORTED_ATTRIBUTES = [
+        "path", "name", "size", "ctime", "mtime"
+    ]
+
     def __init__(self, attr, op, value, action):
         if op in FileRule._OP_MAP:
             op = FileRule._OP_MAP[op]
         if op not in ['eq', 'ne', 'lt', 'lte', 'gt', 'gte', 'match']:
             raise ValueError("Unsupported file filter op: "+op)
-        if attr == 'path':
-            attr = 'pathname'
-        if attr != 'name' and attr not in FileEntry.properties():
+        if attr != 'name' and attr not in self._SUPPORTED_ATTRIBUTES:
             raise ValueError("Unsupported file filter attribute: "+attr)
         self.attr = attr
         if attr == 'size':
-            self.value = int(value)
+            value = str(value).lower()
+            unit = value[-1]
+            if unit == 'g':
+                self.value = int(value[:-1]) << 30
+            elif unit == 'm':
+                self.value = int(value[:-1]) << 20
+            elif unit == 'k':
+                self.value = int(value[:-1]) << 10
+            else:
+                self.value = int(value)
         elif attr == 'ctime' or attr == 'mtime':
             self.value = time.mktime(datetime.strptime(
                 value, "%Y-%m-%d %H:%M:%S").timetuple())

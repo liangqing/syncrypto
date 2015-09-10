@@ -224,6 +224,29 @@ class FileRuleTestCase(unittest.TestCase):
         file_entry.pathname = "test"
         self.assertEqual(f.test(file_entry), None)
 
+    def test_size(self):
+        self.file_entry.size = 2
+        for unit in ["k", "M", "G"]:
+
+            f = FileRule('size', '>', "1"+unit, 'include')
+            self.assertEqual(f.test(self.file_entry), None)
+            f = FileRule('size', '<', "1"+unit, 'include')
+            self.assertEqual(f.test(self.file_entry), 'include')
+
+            self.file_entry.size <<= 10
+
+            f = FileRule('size', '>', "1"+unit, 'include')
+            self.assertEqual(f.test(self.file_entry), 'include')
+            f = FileRule('size', '<', "1"+unit, 'include')
+            self.assertEqual(f.test(self.file_entry), None)
+
+        # no unit
+        self.file_entry.size = 99
+        f = FileRule('size', '>', 100, 'include')
+        self.assertEqual(f.test(self.file_entry), None)
+        f = FileRule('size', '<', 100, 'include')
+        self.assertEqual(f.test(self.file_entry), 'include')
+
 
 class FileRuleSetTestCase(unittest.TestCase):
 
