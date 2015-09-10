@@ -130,7 +130,7 @@ The format of a rule:
 ``include`` means the file matching the rule will syncing, ``exclude`` means the
 file matching the rule will not syncing.
 
-``ignore`` and ``exclude`` are the same action.
+``ignore`` equals ``exclude``.
 
 ``syncrypto`` supports a lot of file attributes while matching rules, the complete
 list is:
