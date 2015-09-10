@@ -149,7 +149,7 @@ operands:
 * ``gte``, ``>=``
 * ``lte``, ``<=``
 * ``ne``, ``!=``, ``<>``
-* ``match``, match by glob, for example, "*.md" matches all files end with "md"
+* ``match``, match by glob, for example, "\*.md" matches all files end with "md"
 * ``regexp``, perform a regular expression match
 
 Change the password
