@@ -3,3 +3,4 @@ nose
 nose-cov
 rednose
 unittest2
+cryptography
