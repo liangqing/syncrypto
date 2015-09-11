@@ -37,6 +37,9 @@ except ImportError:
     from io import BytesIO
 
 
+__version__ = '0.2.0'
+
+
 class GenerateEncryptedFilePathError(Exception):
     pass
 

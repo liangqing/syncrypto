@@ -129,11 +129,13 @@ class Crypto:
             |                  Encrypted Content                  |
             |                        ...                          |
             +-----------------------------------------------------+
-            |                  Encrypted Digest(16)               |
+            |              Encrypted Content Digest(16)           |
             +-----------------------------------------------------+
             |         size(8)*        |   ctime(4)   |   mtime(4) |
             +-----------------------------------------------------+
             |     mode(4)   |            padding(12)              |
+            +-----------------------------------------------------+
+            |              Encrypted Entire Digest(16)            |
             +-----------------------------------------------------+
 
             * size, ctime, mtime, mode are also encrypted
@@ -196,7 +198,11 @@ class Crypto:
             out_fd.write(encryptor.update(chunk))
 
         file_entry.digest = md5.digest()
-        out_fd.write(encryptor.update(self._build_footer(file_entry)))
+        footer = self._build_footer(file_entry)
+        md5.update(footer)
+        entire_digest = md5.digest()
+        out_fd.write(encryptor.update(footer))
+        out_fd.write(encryptor.update(entire_digest))
         out_fd.write(encryptor.finalize())
         return file_entry
 
@@ -234,29 +240,45 @@ class Crypto:
         decompress_obj = None
         if flags & self.COMPRESS:
             decompress_obj = zlib.decompressobj()
-
+        footer_size = 64
+        entire_digest = None
+        entire_digest_check = None
+        content_digest_check = None
+        footer = None
         while not finished:
             chunk, next_chunk = next_chunk, in_fd.read(self.BUFFER_SIZE)
             if chunk:
                 plaintext = decryptor.update(chunk)
                 if len(next_chunk) == 0:
                     plaintext += decryptor.finalize()
-                    file_entry = self._unpack_footer(pathname, plaintext[-48:])
-                    padding_length = bytearray(plaintext[-49:-48])[0]
-                    plaintext = plaintext[:-padding_length-48]
+                    entire_digest = plaintext[-16:]
+                    footer = plaintext[-footer_size:-16]
+                    file_entry = self._unpack_footer(pathname, footer)
+                    padding_length = \
+                        bytearray(plaintext[-footer_size-1:-footer_size])[0]
+                    plaintext = plaintext[:-padding_length-footer_size]
                     finished = True
                 if decompress_obj is not None:
                     plaintext = decompress_obj.decompress(plaintext)
                 md5.update(plaintext)
                 out_fd.write(plaintext)
+                if finished:
+                    content_digest_check = md5.digest()
+                    md5.update(footer)
+                    entire_digest_check = md5.digest()
 
         if decompress_obj is not None:
             rest = decompress_obj.flush()
             md5.update(rest)
             out_fd.write(rest)
 
+        if file_entry is None or entire_digest is None \
+                or entire_digest_check is None or content_digest_check is None:
+            raise UnrecognizedContent()
+
         file_entry.salt = salt
-        if file_entry.digest != md5.digest()[:bs]:
+        if file_entry.digest != content_digest_check or entire_digest != \
+                entire_digest_check:
             raise DigestMissMatch()
 
         return file_entry

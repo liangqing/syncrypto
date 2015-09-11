@@ -18,5 +18,5 @@
 from .filetree import FileEntry, FileTree, FileRule, FileRuleSet, \
     InvalidRegularExpression
 from .crypto import Crypto
-from .core import Syncrypto, InvalidFolder
+from .core import Syncrypto, InvalidFolder, __version__
 from .core import main as cli
