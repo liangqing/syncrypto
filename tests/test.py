@@ -163,38 +163,46 @@ class FileRuleTestCase(unittest.TestCase):
         os.remove(self.file_path)
 
     def test_eq(self):
-        f1 = FileRule('name', 'eq', os.path.basename(self.file_path), 'include')
-        f2 = FileRule('name', 'eq', "...", 'include')
-        self.assertEqual(f1.test(self.file_entry), "include")
-        self.assertEqual(f2.test(self.file_entry), None)
+
+        for op in ['eq', '=', '==']:
+            f1 = FileRule('name', op, os.path.basename(self.file_path),
+                          'include')
+            f2 = FileRule('name', op, "...", 'include')
+            self.assertEqual(f1.test(self.file_entry), "include")
+            self.assertEqual(f2.test(self.file_entry), None)
 
     def test_ne(self):
-        f1 = FileRule('name', 'ne', os.path.basename(self.file_path), 'exclude')
-        f2 = FileRule('name', 'ne', "...", 'exclude')
-        self.assertEqual(f2.test(self.file_entry), "exclude")
-        self.assertEqual(f1.test(self.file_entry), None)
+        for op in ['ne', '!=', '<>']:
+            f1 = FileRule('name', op, os.path.basename(self.file_path),
+                          'exclude')
+            f2 = FileRule('name', op, "...", 'exclude')
+            self.assertEqual(f2.test(self.file_entry), "exclude")
+            self.assertEqual(f1.test(self.file_entry), None)
 
     def test_lt(self):
-        f1 = FileRule('size', 'lt', 10, 'include')
-        f2 = FileRule('size', 'lt', 0, 'include')
-        self.assertEqual(f1.test(self.file_entry), 'include')
-        self.assertEqual(f2.test(self.file_entry), None)
+        for op in ['lt', '<']:
+            f1 = FileRule('size', op, 10, 'include')
+            f2 = FileRule('size', op, 0, 'include')
+            self.assertEqual(f1.test(self.file_entry), 'include')
+            self.assertEqual(f2.test(self.file_entry), None)
 
     def test_gt(self):
-        f1 = FileRule('mtime', 'gt',
-                      format_datetime(time()-3600), 'exclude')
-        f2 = FileRule('mtime', 'gt',
-                      format_datetime(time()+3600), 'exclude')
-        self.assertEqual(f1.test(self.file_entry), 'exclude')
-        self.assertEqual(f2.test(self.file_entry), None)
+        for op in ['gt', '>']:
+            f1 = FileRule('mtime', op,
+                          format_datetime(time()-3600), 'exclude')
+            f2 = FileRule('mtime', op,
+                          format_datetime(time()+3600), 'exclude')
+            self.assertEqual(f1.test(self.file_entry), 'exclude')
+            self.assertEqual(f2.test(self.file_entry), None)
 
     def test_gte(self):
-        f1 = FileRule('mtime', 'gte',
-                      format_datetime(time()-3600), 'exclude')
-        f2 = FileRule('mtime', 'gte',
-                      format_datetime(time()+3600), 'exclude')
-        self.assertEqual(f1.test(self.file_entry), 'exclude')
-        self.assertEqual(f2.test(self.file_entry), None)
+        for op in ['gte', '>=']:
+            f1 = FileRule('mtime', op,
+                          format_datetime(time()-3600), 'exclude')
+            f2 = FileRule('mtime', op,
+                          format_datetime(time()+3600), 'exclude')
+            self.assertEqual(f1.test(self.file_entry), 'exclude')
+            self.assertEqual(f2.test(self.file_entry), None)
 
     def test_lte(self):
         self.file_entry.ctime = int(self.file_entry.ctime)
@@ -239,6 +247,8 @@ class FileRuleTestCase(unittest.TestCase):
             self.assertEqual(f.test(self.file_entry), 'include')
             f = FileRule('size', '<', "1"+unit, 'include')
             self.assertEqual(f.test(self.file_entry), None)
+            f = FileRule('size', 'eq', "2"+unit, 'include')
+            self.assertEqual(f.test(self.file_entry), 'include')
 
         # no unit
         self.file_entry.size = 99
