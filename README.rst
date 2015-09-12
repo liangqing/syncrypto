@@ -22,6 +22,7 @@ The most common scenario is\:
 
                          syncrypto                         syncrypto
   plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
+    in machine X                       in cloud storage                 in machine Y
 
 The files in encrypted folder B are encrypted, so you can store it in any unsafe
 environment, such as cloud service(Dropbox/OneDrive), USB storage or any other
@@ -33,9 +34,14 @@ modified in the encrypted folder after synchronization. This make sure the
 synchronization only changes the necessary content in encrypted folder, and is
 very useful for file based cloud storage service to synchronizing minimal contents.
 
-The synchronization is bidirectional, every time you synchronize two folders
-(one is plaintext folder, another is encrypted folder) with ``syncrypto``,
-you will get the same result in the two folders eventually.
+The synchronization is two-way, files not only syncing from plain text folder to
+encrypted folder, but also syncing from encrypted folder to plain text folder.
+
+``syncrypto`` never delete files, if files or folders should be deleted or over
+written by the syncing algorithm, ``syncrypto`` just move the files or folders
+to the trash, the trash in encrypted folder located at _syncrypto/trash,
+at .syncrypto/trash in plaintext folder
+
 
 Installation
 ============

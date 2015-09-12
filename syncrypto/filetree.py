@@ -283,18 +283,6 @@ class FileRuleSet:
                         action)
 
 
-class FileNode:
-
-    def __init__(self, entry):
-        self.entry = entry
-        self.children = {}
-
-    def append(self, entry):
-        node = FileNode(entry)
-        self.children[entry.name()] = node
-        return node
-
-
 class FileTree:
 
     def __init__(self, table=None):

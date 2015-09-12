@@ -63,6 +63,9 @@ class Syncrypto:
         self.snapshot_tree = snapshot_tree
         self.rule_set = rule_set
         self._debug = debug
+        self._encrypted_folder_is_new = False
+        self._trash_name = datetime.now().isoformat()
+        self._snapshot_trash_name = None
 
         if not os.path.isdir(self.encrypted_folder):
             if os.path.exists(self.encrypted_folder):
@@ -70,7 +73,10 @@ class Syncrypto:
                                     self.encrypted_folder)
             else:
                 os.makedirs(self.encrypted_folder)
-                self._encrypted_folder_is_new = True
+
+        if os.path.exists(os.path.join(self.encrypted_folder, ".syncrypto")):
+            raise InvalidFolder("encrypted folder can not has .syncrypto folder"
+                                ", do you pass the wrong arguments?")
 
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
@@ -80,7 +86,13 @@ class Syncrypto:
                         self.plain_folder)
                 else:
                     os.makedirs(self.plain_folder)
-                    self._plain_folder_is_new = True
+
+            if os.path.exists(
+                    os.path.join(self.plain_folder, "_syncrypto")):
+                raise InvalidFolder(
+                    "plaintext folder can not has _syncrypto folder"
+                    ", do you pass the wrong arguments?")
+
             if self.rule_set is None:
                 self.rule_set = FileRuleSet()
 
@@ -144,8 +156,10 @@ class Syncrypto:
             os.utime(encrypted_path, (mtime, mtime))
             encrypted_file.copy_attr_from(plain_file)
             return encrypted_file
-        if os.path.isdir(encrypted_path):
-            shutil.rmtree(encrypted_path)
+        if os.path.exists(encrypted_path):
+            self._move_to_encrypted_trash(encrypted_file)
+        # if os.path.isdir(encrypted_path):
+        #     shutil.rmtree(encrypted_path)
         directory = os.path.dirname(encrypted_path)
         if not os.path.isdir(directory):
             os.makedirs(directory)
@@ -175,8 +189,10 @@ class Syncrypto:
             os.utime(plain_path, (mtime, mtime))
             plain_file.copy_attr_from(encrypted_file)
             return plain_file
-        if os.path.isdir(plain_path):
-            shutil.rmtree(plain_path)
+        if os.path.exists(plain_path):
+            self._move_to_plain_trash(plain_file)
+        # if os.path.isdir(plain_path):
+        #     shutil.rmtree(plain_path)
         directory = os.path.dirname(plain_path)
         if not os.path.isdir(directory):
             os.makedirs(directory)
@@ -190,42 +206,97 @@ class Syncrypto:
         os.utime(plain_path, (mtime, mtime))
         return plain_file
 
+    @staticmethod
+    def _conflict_path(path):
+        dirname = os.path.dirname(path)
+        filename = os.path.basename(path)
+        dot_pos = filename.rfind(".")
+        if dot_pos > 0:
+            name = filename[:dot_pos]
+            ext = filename[dot_pos+1:]
+        else:
+            name = filename
+            ext = ""
+        name += ".conflict"
+        conflict_path = os.path.join(dirname, name+"."+ext)
+        i = 1
+        if os.path.exists(conflict_path):
+            conflict_path = \
+                os.path.join(dirname, name+"."+str(i)+"."+ext)
+            i += 1
+        return conflict_path
+
     def _is_ignore(self, plain_file, encrypted_file):
         return (self.rule_set.test(plain_file) != 'include' and
                 self.rule_set.test(encrypted_file) != 'include')
 
+    @staticmethod
+    def _is_changed(file_entry, snapshot_file):
+        if file_entry is None or snapshot_file is None:
+            return True
+        if file_entry.digest is not None and snapshot_file.digest is not None:
+            return file_entry.digest != snapshot_file.digest
+        return \
+            file_entry.size != snapshot_file.size or \
+            file_entry.mtime - snapshot_file.mtime > 0.5
+
     def _compare_file(self, encrypted_file, plain_file, snapshot_file):
         if self._is_ignore(plain_file, encrypted_file):
             return "ignore"
+        plain_file_changed = self._is_changed(plain_file, snapshot_file)
+        encrypted_file_changed = self._is_changed(encrypted_file, snapshot_file)
         if plain_file is not None and encrypted_file is not None:
-            if plain_file.mtime > encrypted_file.mtime:
+            if plain_file_changed and not encrypted_file_changed:
                 return "encrypt"
-            elif plain_file.mtime < encrypted_file.mtime:
+            elif encrypted_file_changed and not plain_file_changed:
                 return "decrypt"
+            elif not encrypted_file_changed and not plain_file_changed:
+                return "same"
+            else:
+                return 'conflict'
         elif plain_file is not None:
-            if snapshot_file is None or snapshot_file.mtime < plain_file.mtime:
+            if self._encrypted_folder_is_new or plain_file_changed:
                 return "encrypt"
             else:
                 return "remove plain"
         elif encrypted_file is not None:
-            if snapshot_file is not None and snapshot_file.mtime >= \
-                    encrypted_file.mtime:
-                return "remove encrypted"
-            else:
+            if encrypted_file_changed:
                 return "decrypt"
+            else:
+                return "remove encrypted"
         return None
 
-    def _encrypted_trash_path(self):
-        i = 0
-        suffix = ''
-        while True:
-            path = os.path.join(self.encrypted_folder, '_syncrypto', 'trash',
-                                datetime.now().isoformat()+suffix)
-            if not os.path.exists(path):
-                self._ensure_dir(path)
-                return path
-            i += 1
-            suffix = "."+str(i)
+    def _move_to_encrypted_trash(self, file_entry):
+        trash_path = self._trash_path_in_encrypted_folder(file_entry)
+        if os.path.exists(trash_path):
+            if os.path.isdir(trash_path):
+                shutil.rmtree(trash_path)
+            else:
+                os.remove(trash_path)
+        shutil.move(file_entry.fs_path(self.encrypted_folder), trash_path)
+
+    def _move_to_plain_trash(self, file_entry):
+        trash_path = self._trash_path_in_plain_folder(file_entry)
+        if os.path.exists(trash_path):
+            if os.path.isdir(trash_path):
+                shutil.rmtree(trash_path)
+            else:
+                os.remove(trash_path)
+        shutil.move(file_entry.fs_path(self.plain_folder), trash_path)
+
+    def _trash_path_in_encrypted_folder(self, file_entry):
+        path = file_entry.fs_path(
+            os.path.join(self.encrypted_folder, '_syncrypto', 'trash',
+                         self._trash_name))
+        self._ensure_dir(path)
+        return path
+
+    def _trash_path_in_plain_folder(self, file_entry):
+        path = file_entry.fs_path(
+            os.path.join(self.plain_folder, '.syncrypto', 'trash',
+                         self._trash_name))
+        self._ensure_dir(path)
+        return path
 
     def _encrypted_tree_path(self):
         path = os.path.join(self.encrypted_folder, '_syncrypto', 'filetree')
@@ -260,6 +331,7 @@ class Syncrypto:
         encrypted_tree_path = self._encrypted_tree_path()
         if not os.path.exists(encrypted_tree_path):
             self.encrypted_tree = FileTree()
+            self._encrypted_folder_is_new = True
         else:
             fp = open(encrypted_tree_path, "rb")
             try:
@@ -273,9 +345,10 @@ class Syncrypto:
 
     def _save_snapshot_tree(self):
         fp = open(self._snapshot_tree_path(), 'wb')
+        snapshot_tree_dict = self.snapshot_tree.to_dict()
+        snapshot_tree_dict["trash_name"] = self._trash_name
         self.crypto.compress_fd(
-            BytesIO(json.dumps(self.snapshot_tree.to_dict()).encode("utf-8")),
-            fp)
+            BytesIO(json.dumps(snapshot_tree_dict).encode("utf-8")), fp)
         fp.close()
 
     def _load_plain_tree(self):
@@ -292,8 +365,11 @@ class Syncrypto:
                 tree_fd = BytesIO()
                 self.crypto.decompress_fd(fp, tree_fd)
                 tree_fd.seek(0)
-                self.snapshot_tree = FileTree.from_dict(
-                    json.loads(tree_fd.getvalue().decode("utf-8")))
+                snapshot_tree_dict = \
+                    json.loads(tree_fd.getvalue().decode("utf-8"))
+                if "trash_name" in snapshot_tree_dict:
+                    self._snapshot_trash_name = snapshot_tree_dict["trash_name"]
+                self.snapshot_tree = FileTree.from_dict(snapshot_tree_dict)
             finally:
                 fp.close()
 
@@ -330,6 +406,7 @@ class Syncrypto:
             os.utime(fs_path, (entry.mtime, entry.mtime))
 
     def sync_folder(self):
+
         if self.plain_folder is None:
             raise Exception("please specify the plaintext folder to sync files")
 
@@ -370,6 +447,16 @@ class Syncrypto:
                 self.plain_tree.set(pathname, plain_file)
                 self.info("Decrypt %s to %s." %
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
+            elif action == "same":
+                self.info("%s and %s equal" %
+                          (encrypted_file.fs_pathname, plain_file.fs_pathname))
+            elif action == 'conflict':
+                plain_path = plain_file.fs_path(self.plain_folder)
+                shutil.move(plain_path, self._conflict_path(plain_path))
+                plain_file = self._decrypt_file(pathname)
+                self.plain_tree.set(pathname, plain_file)
+                self.info("Has conflict between %s and %s!" %
+                          (encrypted_file.fs_pathname, plain_file.fs_pathname))
             results.append((action, pathname))
 
         for pathname in encrypted_remove_list:
@@ -390,6 +477,7 @@ class Syncrypto:
                    "and plaintext folder %s") % (
             self.encrypted_folder, self.plain_folder
         ))
+        self._trash_name = datetime.now().isoformat()
         return results
 
     def change_password(self, newpass):
@@ -423,7 +511,7 @@ class Syncrypto:
                 if os.path.isdir(fs_path) and len(os.listdir(fs_path)) <= 0:
                     os.rmdir(fs_path)
                 else:
-                    path = self._encrypted_trash_path()
+                    path = self._trash_path_in_encrypted_folder()
                     os.rename(fs_path, path)
                     parent = os.path.dirname(fs_path)
                     if len(os.listdir(parent)) <= 0:
@@ -440,7 +528,7 @@ def main(args=sys.argv[1:]):
         from .package_info import __version__
         print(__version__)
         exit(0)
-    elif args.encrypted_folder is None:
+    elif args.encrypted_folder is None or args.encrypted_folder == "":
         parser.print_help()
         exit(1)
 
@@ -494,4 +582,7 @@ def main(args=sys.argv[1:]):
     except DecryptError:
         print("Your password is not correct")
         return 3
+    except InvalidFolder as e:
+        print(e.args[0])
+        return 4
     return 1
