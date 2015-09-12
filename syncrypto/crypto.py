@@ -35,11 +35,7 @@ class InvalidKey(Exception):
     pass
 
 
-class DigestMissMatch(Exception):
-    pass
-
-
-class UnrecognizedContent(Exception):
+class DecryptError(Exception):
     pass
 
 
@@ -57,7 +53,7 @@ class Crypto:
 
     def __init__(self, password, key_size=32):
 
-        self.password = password.encode("latin-1")
+        self.password = password.encode("ascii")
         self.key_size = key_size
         self.block_size = 16
 
@@ -210,7 +206,7 @@ class Crypto:
         bs = self.block_size
         line = in_fd.read(bs)
         if len(line) < bs:
-            raise UnrecognizedContent(
+            raise DecryptError(
                 "header line size is not correct, expect %d, got %d" %
                 (bs, len(line)))
         ints = bytearray(line[:2])
@@ -229,7 +225,7 @@ class Crypto:
             pathname_block_size = int((pathname_size/bs+1) * bs)
         pathname_data = in_fd.read(pathname_block_size)
         if len(pathname_data) < pathname_block_size:
-            raise UnrecognizedContent(
+            raise DecryptError(
                 "pathname length is not correct, expect %d, got %d" %
                 (pathname_block_size, len(pathname_data)))
         pathname = decryptor.update(pathname_data)[:pathname_size]
@@ -259,7 +255,13 @@ class Crypto:
                     plaintext = plaintext[:-padding_length-footer_size]
                     finished = True
                 if decompress_obj is not None:
-                    plaintext = decompress_obj.decompress(plaintext)
+                    decompress_error = False
+                    try:
+                        plaintext = decompress_obj.decompress(plaintext)
+                    except zlib.error:
+                        decompress_error = True
+                    if decompress_error:
+                        raise DecryptError()
                 md5.update(plaintext)
                 out_fd.write(plaintext)
                 if finished:
@@ -274,11 +276,11 @@ class Crypto:
 
         if file_entry is None or entire_digest is None \
                 or entire_digest_check is None or content_digest_check is None:
-            raise UnrecognizedContent()
+            raise DecryptError()
 
         file_entry.salt = salt
         if file_entry.digest != content_digest_check or entire_digest != \
                 entire_digest_check:
-            raise DigestMissMatch()
+            raise DecryptError()
 
         return file_entry

@@ -29,15 +29,12 @@ from datetime import datetime
 from time import sleep
 from getpass import getpass
 from stat import *
-from .crypto import Crypto, UnrecognizedContent
+from .crypto import Crypto, DecryptError
 from .filetree import FileTree, FileRuleSet
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
     from io import BytesIO
-
-
-__version__ = '0.2.0'
 
 
 class GenerateEncryptedFilePathError(Exception):
@@ -73,6 +70,7 @@ class Syncrypto:
                                     self.encrypted_folder)
             else:
                 os.makedirs(self.encrypted_folder)
+                self._encrypted_folder_is_new = True
 
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
@@ -82,6 +80,7 @@ class Syncrypto:
                         self.plain_folder)
                 else:
                     os.makedirs(self.plain_folder)
+                    self._plain_folder_is_new = True
             if self.rule_set is None:
                 self.rule_set = FileRuleSet()
 
@@ -247,15 +246,14 @@ class Syncrypto:
         return path
 
     def _save_trees(self):
+        self._save_encrypted_tree()
+        self._save_snapshot_tree()
+
+    def _save_encrypted_tree(self):
         fp = open(self._encrypted_tree_path(), "wb")
         self.crypto.encrypt_fd(
             BytesIO(json.dumps(self.encrypted_tree.to_dict()).encode("utf-8")),
             fp, None, Crypto.COMPRESS)
-        fp.close()
-        fp = open(self._snapshot_tree_path(), 'wb')
-        self.crypto.compress_fd(
-            BytesIO(json.dumps(self.snapshot_tree.to_dict()).encode("utf-8")),
-            fp)
         fp.close()
 
     def _load_encrypted_tree(self):
@@ -270,10 +268,15 @@ class Syncrypto:
                 tree_fd.seek(0)
                 self.encrypted_tree = FileTree.from_dict(
                     json.loads(tree_fd.getvalue().decode("utf-8")))
-            except UnrecognizedContent:
-                self.encrypted_tree = FileTree()
             finally:
                 fp.close()
+
+    def _save_snapshot_tree(self):
+        fp = open(self._snapshot_tree_path(), 'wb')
+        self.crypto.compress_fd(
+            BytesIO(json.dumps(self.snapshot_tree.to_dict()).encode("utf-8")),
+            fp)
+        fp.close()
 
     def _load_plain_tree(self):
         self.plain_tree = FileTree.from_fs(self.plain_folder,
@@ -291,8 +294,6 @@ class Syncrypto:
                 tree_fd.seek(0)
                 self.snapshot_tree = FileTree.from_dict(
                     json.loads(tree_fd.getvalue().decode("utf-8")))
-            except UnrecognizedContent:
-                self.snapshot_tree = FileTree()
             finally:
                 fp.close()
 
@@ -392,6 +393,7 @@ class Syncrypto:
         return results
 
     def change_password(self, newpass):
+        newpass = newpass.encode('ascii')
         oldpass = self.crypto.password
         if oldpass == newpass:
             raise ChangeTheSamePassword()
@@ -404,11 +406,13 @@ class Syncrypto:
             self.crypto.decrypt_fd(fp, string)
             fp.close()
 
+            string.seek(0)
             self.crypto.password = newpass
             fp = open(fs_path, 'wb')
-            self.crypto.encrypt_fd(string, fp)
+            self.crypto.encrypt_fd(string, fp, file_entry)
             fp.close()
         self.crypto.password = newpass
+        self._save_encrypted_tree()
 
     def clear_encrypted_folder(self):
         encrypted_tree = FileTree.from_fs(self.encrypted_folder)
@@ -432,6 +436,14 @@ def main(args=sys.argv[1:]):
 
     args = parser.parse_args(args=args)
 
+    if args.version:
+        from .package_info import __version__
+        print(__version__)
+        exit(0)
+    elif args.encrypted_folder is None:
+        parser.print_help()
+        exit(1)
+
     password = args.password
 
     rule_set = FileRuleSet()
@@ -445,35 +457,41 @@ def main(args=sys.argv[1:]):
 
     crypto = Crypto(password)
 
-    syncrypto = Syncrypto(crypto, args.encrypted_folder, args.plaintext_folder,
-                          rule_set=rule_set, rule_file=args.rule_file,
-                          debug=args.debug)
-
-    if args.change_password:
-        newpass1 = None
-        while True:
-            newpass1 = getpass(b'Please input the new password:')
-            newpass2 = getpass(b'Please re input the new password:')
-            if len(newpass1) < 6:
-                print("new password is too short")
-            elif newpass1 != newpass2:
-                print("two inputs are not match")
-            else:
-                break
-        syncrypto.change_password(newpass1)
-        return 0
-    elif args.clear_encrypted_folder:
-        syncrypto.clear_encrypted_folder()
-        return 0
-    elif args.print_encrypted_tree:
-        print(syncrypto.encrypted_tree)
-        return 0
-    elif args.plaintext_folder:
-        if args.interval:
+    try:
+        syncrypto = Syncrypto(crypto,
+                              args.encrypted_folder,
+                              args.plaintext_folder,
+                              rule_set=rule_set,
+                              rule_file=args.rule_file,
+                              debug=args.debug)
+        if args.change_password:
+            newpass1 = None
             while True:
+                newpass1 = getpass(b'Please input the new password:')
+                newpass2 = getpass(b'Please re input the new password:')
+                if len(newpass1) < 6:
+                    print("new password is too short")
+                elif newpass1 != newpass2:
+                    print("two inputs are not match")
+                else:
+                    break
+            syncrypto.change_password(newpass1)
+            return 0
+        elif args.clear_encrypted_folder:
+            syncrypto.clear_encrypted_folder()
+            return 0
+        elif args.print_encrypted_tree:
+            print(syncrypto.encrypted_tree)
+            return 0
+        elif args.plaintext_folder:
+            if args.interval:
+                while True:
+                    syncrypto.sync_folder()
+                    sleep(args.interval)
+            else:
                 syncrypto.sync_folder()
-                sleep(args.interval)
-        else:
-            syncrypto.sync_folder()
-        return 0
+            return 0
+    except DecryptError:
+        print("Your password is not correct")
+        return 3
     return 1

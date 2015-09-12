@@ -11,10 +11,10 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='syncrypto',
     version=syncrypto.__version__,
-    description='Synchronize a folder with its encrypted content',
+    description=syncrypto.__doc__,
     long_description=long_description,
     url='https://github.com/liangqing/syncrypto',
-    author='liangqing',
+    author=syncrypto.__author__,
     author_email='liangqing226@gmail.com',
     license='http://www.apache.org/licenses/LICENSE-2.0',
     classifiers=[

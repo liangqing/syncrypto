@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Qing Liang (https://github.com/liangqing)
 #
@@ -15,9 +15,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from .filetree import FileEntry, FileTree, FileRule, FileRuleSet, \
-    InvalidRegularExpression
-from .crypto import Crypto
-from .core import Syncrypto, InvalidFolder
-from .core import main as cli
-from .package_info import __version__, __author__, __doc__
+__title__ = "syncrypto"
+__version__ = "0.2.1"
+__author__ = 'Qing Liang'
+__license__ = 'Apache 2.0'
+__copyright__ = 'Copyright 2015 Qing Liang'
+__doc__ = 'Synchronize a folder with its encrypted content'

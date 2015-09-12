@@ -17,15 +17,16 @@
 
 from __future__ import unicode_literals
 import argparse
+from .package_info import __doc__
 
 parser = argparse.ArgumentParser(
-    description='Synchronize plaintext folder with its encrypted content'
+    description=__doc__
 )
 
 parser.add_argument(
     'encrypted_folder',
     help='The encrypted folder',
-    # nargs='?'
+    nargs='?'
 )
 
 parser.add_argument(
@@ -82,7 +83,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-v',
     '--version',
+    action="store_true",
     help='Display the version'
 )

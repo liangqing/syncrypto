@@ -29,6 +29,9 @@ from syncrypto import FileEntry, FileRule, FileRuleSet, FileTree, Crypto, \
 from syncrypto import cli as syncrypto_cli
 from time import time, strftime, localtime, sleep
 from filecmp import dircmp
+from subprocess import Popen, PIPE
+from syncrypto.crypto import DecryptError
+
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
@@ -553,6 +556,19 @@ dir2/file2
         self.plain_tree = FileTree.from_fs(self.plain_folder)
         self.isPass()
 
+    def testChangePassword(self):
+        sync = Syncrypto(self.crypto, self.encrypted_folder, self.plain_folder,
+                         self.encrypted_tree, self.plain_tree,
+                         self.snapshot_tree)
+        sync.sync_folder()
+        oldpass = self.crypto.password
+        newpass = "new password"
+        sync.change_password(newpass)
+        self.crypto.password = oldpass
+        self.assertRaises(DecryptError, sync._load_encrypted_tree)
+        self.crypto.password = newpass.encode("ascii")
+        sync.sync_folder()
+
 
 class CliTestCase(unittest.TestCase):
 
@@ -573,18 +589,26 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(len(directory_cmp.right_only), 0)
         self.assertEqual(len(directory_cmp.diff_files), 0)
 
+    def cli(self, args):
+        self.assertEqual(syncrypto_cli(args), 0)
+
+    def pipe(self, args):
+        os.chdir(os.path.dirname(os.path.dirname(__file__)))
+        args = ["python", "-m", "syncrypto"] + args
+        return Popen(args, stdout=PIPE, stdin=PIPE)
+
     def checkResultAfterSync(self):
-        syncrypto_cli(["--password", self.password, self.encrypted_folder,
-                       self.plain_folder])
-        syncrypto_cli(["--password", self.password, self.encrypted_folder,
-                       self.plain_folder_check])
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder])
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder_check])
         self.checkResult()
 
     def checkResultAfterSyncFromCheckFolder(self):
-        syncrypto_cli(["--password", self.password, self.encrypted_folder,
-                       self.plain_folder_check])
-        syncrypto_cli(["--password", self.password, self.encrypted_folder,
-                       self.plain_folder])
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder_check])
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder])
         self.checkResult()
 
     def clearFolders(self):
@@ -619,22 +643,28 @@ class CliTestCase(unittest.TestCase):
         invalid_folder = self.encrypted_folder+os.path.sep+"invalid_folder"
         with open(invalid_folder, 'wb') as f:
             f.write(b'Test')
-        syncrypto_cli(["--password", self.password,
-                       invalid_folder,
-                       self.plain_folder])
+        self.cli(["--password", self.password, invalid_folder,
+                  self.plain_folder])
         os.remove(invalid_folder)
 
     def passInvalidPlaintextFolder(self):
         invalid_folder = self.plain_folder+os.path.sep+"invalid_folder"
         with open(invalid_folder, 'wb') as f:
             f.write(b'Test')
-        syncrypto_cli(["--password", self.password, self.encrypted_folder,
-                       invalid_folder])
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  invalid_folder])
         os.remove(invalid_folder)
 
     def testFalseDirectory(self):
         self.assertRaises(InvalidFolder, self.passInvalidEncryptedFolder)
         self.assertRaises(InvalidFolder, self.passInvalidPlaintextFolder)
+
+    def testInvalidPassword(self):
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder])
+        self.assertEqual(syncrypto_cli(["--password", self.password+"!",
+                                        self.encrypted_folder,
+                                        self.plain_folder]), 3)
 
     def testBasicSync(self):
         self.clearFolders()
@@ -840,11 +870,11 @@ non_empty_folder2/in/sub/folder/file: test 2
 filename_sync: 1
 filename_not_sync: 2
         ''')
-        syncrypto_cli(["--password", self.password,
-                       "--rule", "exclude: name match *_not_sync",
-                       self.encrypted_folder, self.plain_folder])
-        syncrypto_cli(["--password", self.password,
-                       self.encrypted_folder, self.plain_folder_check])
+        self.cli(["--password", self.password,
+                  "--rule", "exclude: name match *_not_sync",
+                  self.encrypted_folder, self.plain_folder])
+        self.cli(["--password", self.password,
+                  self.encrypted_folder, self.plain_folder_check])
         directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
         self.assertEqual(len(directory_cmp.right_only), 0)
@@ -861,10 +891,10 @@ filename_not_sync: 2
             os.mkdir(dot_folder)
         with open(os.path.join(dot_folder, "rules"), 'wb') as f:
             f.write(b'exclude: name match *_not_sync')
-        syncrypto_cli(["--password", self.password,
-                       self.encrypted_folder, self.plain_folder])
-        syncrypto_cli(["--password", self.password,
-                       self.encrypted_folder, self.plain_folder_check])
+        self.cli(["--password", self.password,
+                  self.encrypted_folder, self.plain_folder])
+        self.cli(["--password", self.password,
+                  self.encrypted_folder, self.plain_folder_check])
         directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
         self.assertEqual(len(directory_cmp.right_only), 0)
@@ -880,18 +910,6 @@ normal_folder/file: hello
         ''')
         self.checkResultAfterSync()
 
-#     def testChangePassword(self):
-#         self.clearFolders()
-#         prepare_filetree(self.plain_folder, '''
-# file_reserve: test
-# folder/reserve: LOL
-# empty_folder1/
-# empty_folder2/in/sub/folder/
-# non_empty_folder1/file: test 1
-# non_empty_folder2/in/sub/folder/file: test 2
-#         ''')
-#         syncrypto_cli(["--password", self.password,
-#                        "--change-password", self.encrypted_folder])
 
 if __name__ == '__main__':
     unittest.main()
