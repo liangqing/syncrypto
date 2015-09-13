@@ -58,6 +58,8 @@ Installation
 * python 3.3
 * python 3.4
 
+and it support all OS platforms(Linux, MacOSX, Windows) that python support
+
 you can install it by pip_:
 
 .. _pip: https://pip.pypa.io/en/latest/installing.html
@@ -92,7 +94,7 @@ If you want ignore files while synchronizing, you can add rule\:
 
 .. code-block:: bash
 
-    syncrypto --rule "ignore: name match *.swp"
+    syncrypto [encrypted folder] [plaintext folder] --rule 'ignore: name match *.swp'
 
 the command above ignores files which name matches \*.swp
 
@@ -100,7 +102,7 @@ You can add rules multiple times\:
 
 .. code-block:: bash
 
-    syncrypto --rule "include: name eq README.md" --rule "ignore: name match *.md"
+    syncrypto [encrypted folder] [plaintext folder] --rule 'include: name eq README.md' --rule 'ignore: name match *.md'
 
 the command above ignores files matching "\*.md" but includes files named "README.md".
 
@@ -120,7 +122,7 @@ and use the rules by "--rule-file" option:
 
 .. code-block:: bash
 
-    syncrypto --rule-file [rule file path]
+    syncrypto [encrypted folder] [plaintext folder] --rule-file [rule file path]
 
 the default rule file path is "[plaintext folder]/.syncrypto/rules", so you can
 add rules in "[plaintext folder]/.syncrypto/rules", and don't need specify the
@@ -163,6 +165,11 @@ operands:
 * ``match``, match by glob, for example, "\*.md" matches all files end with "md"
 * ``regexp``, perform a regular expression match
 
+The unit of value in ``size`` rules are "byte" by default, you can also use
+"K", "M" "G", for example specify the value "2K" means 2046 bytes
+
+The format of value in ``ctime``, ``mtime`` is "%Y-%m-%d %H:%M:%S"
+
 Change the password
 -------------------
 
@@ -184,4 +191,4 @@ Show the help
 License
 =======
 
-Apache License
+Apache License, Version 2.0

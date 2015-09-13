@@ -167,7 +167,7 @@ class FileRule:
                 value += '$'
             try:
                 self.value = re.compile(value)
-            except Exception as e:
+            except Exception:
                 self.value = None
             if self.value is None:
                 raise InvalidRegularExpression(

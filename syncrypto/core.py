@@ -213,16 +213,16 @@ class Syncrypto:
         dot_pos = filename.rfind(".")
         if dot_pos > 0:
             name = filename[:dot_pos]
-            ext = filename[dot_pos+1:]
+            ext = filename[dot_pos:]
         else:
             name = filename
             ext = ""
         name += ".conflict"
-        conflict_path = os.path.join(dirname, name+"."+ext)
+        conflict_path = os.path.join(dirname, name+ext)
         i = 1
         if os.path.exists(conflict_path):
             conflict_path = \
-                os.path.join(dirname, name+"."+str(i)+"."+ext)
+                os.path.join(dirname, name+"."+str(i)+ext)
             i += 1
         return conflict_path
 
@@ -434,8 +434,11 @@ class Syncrypto:
         self.debug(self.plain_tree)
         self.debug("snapshot_tree:")
         self.debug(self.snapshot_tree)
-
+        plain_ignore_prefix = None
         for pathname in pathnames:
+            if plain_ignore_prefix is not None \
+                    and pathname.startswith(plain_ignore_prefix):
+                self.plain_tree.remove(pathname)
             encrypted_file = self.encrypted_tree.get(pathname)
             plain_file = self.plain_tree.get(pathname)
             action = self._compare_file(encrypted_file, plain_file,
@@ -459,8 +462,12 @@ class Syncrypto:
                 self.info("%s and %s equal" %
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
             elif action == 'conflict':
+                if plain_file.isdir and encrypted_file.isdir:
+                    continue
                 plain_path = plain_file.fs_path(self.plain_folder)
                 shutil.move(plain_path, self._conflict_path(plain_path))
+                if plain_file.isdir:
+                    plain_ignore_prefix = pathname
                 plain_file = self._decrypt_file(pathname)
                 self.plain_tree.set(pathname, plain_file)
                 self.info("Has conflict between %s and %s!" %

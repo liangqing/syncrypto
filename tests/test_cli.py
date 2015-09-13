@@ -25,10 +25,9 @@ import os.path
 import shutil
 from tempfile import mkdtemp
 from syncrypto import cli as syncrypto_cli
-from time import sleep
-from filecmp import dircmp
+from time import time
 from subprocess import Popen, PIPE
-from util import clear_folder, prepare_filetree
+from util import clear_folder, prepare_filetree, tree_cmp
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -49,11 +48,14 @@ class CliTestCase(unittest.TestCase):
         shutil.rmtree(self.plain_folder_check)
         shutil.rmtree(self.encrypted_folder)
 
+    def tree_cmp(self, folder1, folder2):
+        return tree_cmp(folder1, folder2, ignores=[".syncrypto"])
+
     def check_result(self):
-        directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(len(directory_cmp.left_only), 0)
-        self.assertEqual(len(directory_cmp.right_only), 0)
-        self.assertEqual(len(directory_cmp.diff_files), 0)
+        cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(cmp.left_only, [])
+        self.assertEqual(cmp.right_only, [])
+        self.assertEqual(cmp.diff_files, [])
 
     def cli(self, args):
         self.assertEqual(syncrypto_cli(args), 0)
@@ -82,28 +84,34 @@ class CliTestCase(unittest.TestCase):
         clear_folder(self.plain_folder_check)
         clear_folder(self.encrypted_folder)
 
+    def norm_path(self, folder, pathname):
+        return folder+os.path.sep+pathname.replace("/", os.path.sep)
+
     def modify_file(self, folder, pathname, content):
-        sleep(1)
-        fd = open(folder+os.path.sep+pathname, 'wb')
+        path = self.norm_path(folder, pathname)
+        fd = open(path, 'wb')
         fd.write(content.encode("utf-8"))
         fd.close()
+        os.utime(path, (time(), time()+1))
 
     def add_file(self, folder, pathname, content):
-        fd = open(folder+os.path.sep+pathname, 'wb')
+        path = self.norm_path(folder, pathname)
+        fd = open(path, 'wb')
         fd.write(content.encode("utf-8"))
         fd.close()
 
     def add_folder(self, folder, pathname):
-        os.makedirs(folder+os.path.sep+pathname)
+        os.makedirs(self.norm_path(folder, pathname))
 
     def delete_file(self, folder, pathname):
-        os.remove(folder+os.path.sep+pathname)
+        os.remove(self.norm_path(folder, pathname))
 
     def delete_folder(self, folder, pathname):
-        shutil.rmtree(folder+os.path.sep+pathname)
+        shutil.rmtree(self.norm_path(folder, pathname))
 
     def rename(self, folder, pathname, pathname2):
-        os.rename(folder+os.path.sep+pathname, folder+os.path.sep+pathname2)
+        os.rename(self.norm_path(folder, pathname),
+                  self.norm_path(folder, pathname2))
 
     def test_invalid_password(self):
         self.cli(["--password", self.password, self.encrypted_folder,
@@ -322,7 +330,7 @@ class CliTestCase(unittest.TestCase):
                   self.encrypted_folder, self.plain_folder])
         self.cli(["--password", self.password,
                   self.encrypted_folder, self.plain_folder_check])
-        directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
+        directory_cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
         self.assertEqual(len(directory_cmp.right_only), 0)
         self.assertEqual(len(directory_cmp.diff_files), 0)
@@ -342,7 +350,7 @@ class CliTestCase(unittest.TestCase):
                   self.encrypted_folder, self.plain_folder])
         self.cli(["--password", self.password,
                   self.encrypted_folder, self.plain_folder_check])
-        directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
+        directory_cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
         self.assertEqual(len(directory_cmp.right_only), 0)
         self.assertEqual(len(directory_cmp.diff_files), 0)
@@ -356,6 +364,56 @@ class CliTestCase(unittest.TestCase):
             117/hello: 2
         ''')
         self.check_result_after_sync()
+
+    def test_conflict_starting(self):
+        self.clear_folders()
+        prepare_filetree(self.plain_folder, '''
+            files.txt: text file
+            folder/no_extension: no extension file
+            folder/no_conflict1:1
+        ''')
+        prepare_filetree(self.plain_folder_check, '''
+            files.txt: different text file!
+            folder/no_extension: no extension file!
+            folder/no_conflict2: 2
+        ''')
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder])
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder_check])
+        cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(cmp.left_only, [])
+        self.assertEqual(sorted(cmp.right_only),
+                         ["files.conflict.txt",
+                          "folder/no_conflict2",
+                          "folder/no_extension.conflict"])
+        self.assertEqual(cmp.diff_files, [])
+        self.assertEqual(open(os.path.join(self.plain_folder_check,
+                                           "files.conflict.txt")).read(),
+                         "different text file!")
+        self.assertEqual(open(
+            os.path.join(self.plain_folder_check,
+                         "folder/no_extension.conflict")).read(),
+                         "no extension file!")
+
+    def test_conflict_after_syncing(self):
+        self.clear_folders()
+        prepare_filetree(self.plain_folder, '''
+            files.txt: text file
+            folder/no_extension: no extension file
+            folder/no_conflict1:1
+        ''')
+        self.check_result_after_sync()
+        self.modify_file(self.plain_folder, "files.txt", "modified")
+        self.modify_file(self.plain_folder_check, "files.txt", "modified 2")
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder])
+        self.cli(["--password", self.password, self.encrypted_folder,
+                  self.plain_folder_check])
+        cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(cmp.left_only, [])
+        self.assertEqual(sorted(cmp.right_only),
+                         ["files.conflict.txt"])
 
 
 if __name__ == '__main__':
