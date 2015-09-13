@@ -20,11 +20,12 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from io import open
 import unittest
+import sys
 import os
 import os.path
 import shutil
 from tempfile import mkdtemp, mkstemp
-from syncrypto import cli as syncrypto_cli
+from syncrypto import cli as syncrypto_cli_raw
 from time import time
 from subprocess import Popen, PIPE
 from util import clear_folder, prepare_filetree, tree_cmp
@@ -33,6 +34,18 @@ try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
     from io import BytesIO
+
+
+FS_ENCODING = sys.getfilesystemencoding()
+py3 = sys.version_info[0] == 3
+py2 = sys.version_info[0] == 2
+
+
+def syncrypto_cli(args):
+    if py3:
+        return syncrypto_cli_raw(args)
+    args = [arg.encode(FS_ENCODING) for arg in args]
+    return syncrypto_cli_raw(args)
 
 
 class CliTestCase(unittest.TestCase):
@@ -332,7 +345,8 @@ class CliTestCase(unittest.TestCase):
             filename_not_sync: 2
         ''')
         self.cli(["--password-file", self.password_file,
-                  "--rule", "exclude: name match *_not_sync",
+                  "--rule",
+                  "exclude: name match *_not_sync",
                   self.encrypted_folder, self.plain_folder])
         self.cli(["--password-file", self.password_file,
                   self.encrypted_folder, self.plain_folder_check])
@@ -471,6 +485,25 @@ class CliTestCase(unittest.TestCase):
                                            self.password_file,
                                            self.plain_folder,
                                            self.encrypted_folder]), 0)
+
+    def test_not_ascii_arguments(self):
+        plain_folder = mkdtemp("中文")
+        plain_folder_check = mkdtemp("中文")
+        encrypted_folder = mkdtemp("中文")
+        prepare_filetree(plain_folder, '''
+            文件: 你好
+        ''')
+        self.cli(["--password-file", self.password_file,
+                  encrypted_folder,
+                  plain_folder])
+        self.cli(["--password-file", self.password_file,
+                  encrypted_folder,
+                  plain_folder_check])
+        cmp_result = self.tree_cmp(plain_folder, plain_folder_check)
+        self.assertEqual(cmp_result.left_only, [])
+        self.assertEqual(cmp_result.right_only, [])
+        self.assertEqual(cmp_result.diff_files, [])
+
 
 if __name__ == '__main__':
     unittest.main()

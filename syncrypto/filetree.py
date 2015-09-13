@@ -29,6 +29,10 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from io import StringIO
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class InvalidRuleString(Exception):
@@ -54,13 +58,13 @@ class FileEntry:
         self.salt = salt
 
     def __str__(self):
-        s = StringIO()
         t = datetime.fromtimestamp(self.mtime)
         if self.isdir:
-            print('directory', self.pathname, ':', t, self.fs_pathname, file=s)
+            return " ".join(['directory',
+                             self.pathname, ':', str(t), self.fs_pathname])
         else:
-            print('file', self.pathname, ':', t, self.fs_pathname, file=s)
-        return s.getvalue()
+            return " ".join(['file',
+                             self.pathname, ':', str(t), self.fs_pathname])
 
     def name(self):
         return (self.split())[1]

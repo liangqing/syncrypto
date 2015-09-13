@@ -17,7 +17,20 @@
 
 from __future__ import unicode_literals
 import argparse
+import sys
 from .package_info import __doc__
+
+
+fs_encoding = sys.getfilesystemencoding()
+py3 = sys.version_info[0] == 3
+py2 = sys.version_info[0] == 2
+
+
+def string(s):
+    if py3:
+        return s
+    return unicode(s, encoding=fs_encoding)
+
 
 parser = argparse.ArgumentParser(
     description=__doc__
@@ -26,17 +39,20 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     'encrypted_folder',
     help='The encrypted folder',
+    type=string,
     nargs='?'
 )
 
 parser.add_argument(
     'plaintext_folder',
     help='The plaintext folder',
+    type=string,
     nargs='?'
 )
 
 parser.add_argument(
     '--password-file',
+    type=string,
     help=("Use the password in the file instead of "
           "getting it from interactive input")
 )
@@ -61,12 +77,14 @@ parser.add_argument(
 
 parser.add_argument(
     '--decrypt-file',
+    type=string,
     help=('Decrypt a file, it will store the result plaintext file in current '
           'directory unless you specify --out-file option')
 )
 
 parser.add_argument(
     '--out-file',
+    type=string,
     help='When decrypting a file, specify the output plaintext file path'
 )
 
@@ -78,11 +96,13 @@ parser.add_argument(
 
 parser.add_argument(
     '--rule-file',
+    type=string,
     help='Specify the rule file, default is [plaintext folder]/.syncrypto/rules'
 )
 
 parser.add_argument(
     '--rule',
+    type=string,
     action="append",
     help='Add file include or exclude rule'
 )

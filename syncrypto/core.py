@@ -554,7 +554,7 @@ def main(args=sys.argv[1:]):
 
     password = None
 
-    if os.path.exists(args.password_file):
+    if args.password_file is not None and os.path.exists(args.password_file):
         password = open(args.password_file).read()
 
     rule_set = FileRuleSet()
@@ -574,7 +574,7 @@ def main(args=sys.argv[1:]):
             decrypt_file(crypto, args.decrypt_file, args.out_file)
             return 0
 
-        if args.encrypted_folder is None or args.encrypted_folder == "":
+        if args.encrypted_folder is None:
             parser.print_help()
             return 1
 
