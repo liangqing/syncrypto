@@ -358,11 +358,11 @@ class FileTree:
 
     def __str__(self):
         table = self._table
-        s = StringIO()
+        s = ""
         for key in table:
             item = table[key]
-            print("\t", item, file=s)
-        return s.getvalue()
+            s += "\t" + str(item)
+        return s
 
     def to_dict(self):
         table = {}
