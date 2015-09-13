@@ -105,14 +105,13 @@ class Crypto:
     def _build_footer(file_entry):
         return file_entry.digest + \
                pack(b'!Q', file_entry.size) + \
-               pack(b'!I', int(file_entry.ctime)) + \
                pack(b'!I', int(file_entry.mtime)) + \
-               pack(b'!i', file_entry.mode) + (12 * b'\0')
+               pack(b'!i', file_entry.mode)
 
     @staticmethod
     def _unpack_footer(pathname, footer):
-        (size, ctime, mtime, mode) = unpack(b'!QIIi', footer[16:36])
-        return FileEntry(pathname, size, ctime, mtime, mode,
+        (size, mtime, mode) = unpack(b'!QIi', footer[16:32])
+        return FileEntry(pathname, size, None, mtime, mode,
                          footer[:16], False)
 
     def encrypt_fd(self, in_fd, out_fd, file_entry, flags=0):
@@ -127,14 +126,12 @@ class Crypto:
             +-----------------------------------------------------+
             |              Encrypted Content Digest(16)           |
             +-----------------------------------------------------+
-            |         size(8)*        |   ctime(4)   |   mtime(4) |
-            +-----------------------------------------------------+
-            |     mode(4)   |            padding(12)              |
+            |         size(8)*        |   mtime(4)   |   mode(4)  |
             +-----------------------------------------------------+
             |              Encrypted Entire Digest(16)            |
             +-----------------------------------------------------+
 
-            * size, ctime, mtime, mode are also encrypted
+            * size, mtime, mode are also encrypted
         """
         bs = self.block_size
         if file_entry is None:
@@ -236,7 +233,7 @@ class Crypto:
         decompress_obj = None
         if flags & self.COMPRESS:
             decompress_obj = zlib.decompressobj()
-        footer_size = 64
+        footer_size = 48
         entire_digest = None
         entire_digest_check = None
         content_digest_check = None

@@ -16,8 +16,8 @@
 #    limitations under the License.
 
 __title__ = "syncrypto"
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 __author__ = 'Qing Liang'
 __license__ = 'Apache 2.0'
-__copyright__ = 'Copyright 2015 Qing Liang'
+__copyright__ = 'Copyright 2015 Qing Liang (https://github.com/liangqing)'
 __doc__ = 'Synchronize a folder with its encrypted content'

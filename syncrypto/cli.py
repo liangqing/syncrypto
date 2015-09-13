@@ -36,9 +36,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-p',
-    '--password',
-    help='password'
+    '--password-file',
+    help=("Use the password in the file instead of "
+          "getting it from interactive input")
 )
 
 parser.add_argument(
@@ -48,9 +48,26 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '--clear-encrypted-folder',
+    action='store_true',
+    help='Clear the files in encrypted folder'
+)
+
+parser.add_argument(
     '--print-encrypted-tree',
     action='store_true',
     help='Print the file tree in encrypted folder'
+)
+
+parser.add_argument(
+    '--decrypt-file',
+    help=('Decrypt a file, it will store the result plaintext file in current '
+          'directory unless you specify --out-file option')
+)
+
+parser.add_argument(
+    '--out-file',
+    help='When decrypting a file, specify the output plaintext file path'
 )
 
 parser.add_argument(

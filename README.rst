@@ -151,7 +151,7 @@ list is:
 * ``name``, the name of the file, include file extension.
 * ``path``, the relative path from the root of the plaintext folder.
 * ``size``, the size of the file
-* ``ctime``, the creation time of the file
+* ``ctime``, the change time of the file, (in windows, it is creation time)
 * ``mtime``, the modification time of the file
 
 operands:

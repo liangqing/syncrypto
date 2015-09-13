@@ -26,8 +26,10 @@ import shutil
 import hashlib
 import json
 from datetime import datetime
-from time import sleep
+from time import sleep, time
 from getpass import getpass
+from lockfile import LockFile
+from random import randint
 from stat import *
 from .crypto import Crypto, DecryptError
 from .filetree import FileTree, FileRuleSet
@@ -69,20 +71,20 @@ class Syncrypto:
 
         if not os.path.isdir(self.encrypted_folder):
             if os.path.exists(self.encrypted_folder):
-                raise InvalidFolder("encrypted folder path is not correct: " +
+                raise InvalidFolder("Encrypted folder path is not correct: " +
                                     self.encrypted_folder)
             else:
                 os.makedirs(self.encrypted_folder)
 
         if os.path.exists(os.path.join(self.encrypted_folder, ".syncrypto")):
-            raise InvalidFolder("encrypted folder can not has .syncrypto folder"
-                                ", do you pass the wrong arguments?")
+            raise InvalidFolder("Encrypted folder can not has .syncrypto folder"
+                                " within it, do you pass the wrong arguments?")
 
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
                 if os.path.exists(self.plain_folder):
                     raise InvalidFolder(
-                        "plaintext folder path is not correct: " +
+                        "Plaintext folder path is not correct: " +
                         self.plain_folder)
                 else:
                     os.makedirs(self.plain_folder)
@@ -90,7 +92,7 @@ class Syncrypto:
             if os.path.exists(
                     os.path.join(self.plain_folder, "_syncrypto")):
                 raise InvalidFolder(
-                    "plaintext folder can not has _syncrypto folder"
+                    "Plaintext folder can not has _syncrypto folder within it"
                     ", do you pass the wrong arguments?")
 
             if self.rule_set is None:
@@ -407,7 +409,7 @@ class Syncrypto:
             fs_path = entry.fs_path(root)
             os.utime(fs_path, (entry.mtime, entry.mtime))
 
-    def sync_folder(self):
+    def _do_sync_folder(self):
 
         if self.plain_folder is None:
             raise Exception("please specify the plaintext folder to sync files")
@@ -489,6 +491,11 @@ class Syncrypto:
         self._trash_name = datetime.now().isoformat()
         return results
 
+    def sync_folder(self):
+        with LockFile(self.encrypted_folder):
+            with LockFile(self.plain_folder):
+                self._do_sync_folder()
+
     def change_password(self, newpass):
         newpass = newpass.encode('ascii')
         oldpass = self.crypto.password
@@ -512,6 +519,28 @@ class Syncrypto:
         self._save_encrypted_tree()
 
 
+def _generate_tmp_path(folder=None):
+    if folder is None:
+        folder = os.getcwd()
+    while True:
+        path = os.path.join(folder,
+                            "%d_%d" % (int(time()), randint(1000, 9999)))
+        if not os.path.exists(path):
+            return path
+
+
+def decrypt_file(crypto, encrypted_path, plain_path=None):
+    if plain_path is not None:
+        file_entry = crypto.decrypt_file(encrypted_path, plain_path)
+    else:
+        tmp_path = _generate_tmp_path()
+        file_entry = crypto.decrypt_file(encrypted_path, tmp_path)
+        plain_path = file_entry.name()
+        os.rename(tmp_path, plain_path)
+    os.chmod(plain_path, file_entry.mode)
+    os.utime(plain_path, (file_entry.mtime, file_entry.mtime))
+
+
 def main(args=sys.argv[1:]):
 
     from .cli import parser
@@ -521,12 +550,12 @@ def main(args=sys.argv[1:]):
     if args.version:
         from .package_info import __version__
         print(__version__)
-        exit(0)
-    elif args.encrypted_folder is None or args.encrypted_folder == "":
-        parser.print_help()
-        exit(1)
+        return 1
 
-    password = args.password
+    password = None
+
+    if os.path.exists(args.password_file):
+        password = open(args.password_file).read()
 
     rule_set = FileRuleSet()
 
@@ -534,12 +563,21 @@ def main(args=sys.argv[1:]):
         for rule_string in args.rule:
             rule_set.add_rule_by_string(rule_string)
 
-    if not password:
+    if password is None:
         password = getpass(b'Please input the password:')
 
     crypto = Crypto(password)
 
     try:
+
+        if args.decrypt_file is not None:
+            decrypt_file(crypto, args.decrypt_file, args.out_file)
+            return 0
+
+        if args.encrypted_folder is None or args.encrypted_folder == "":
+            parser.print_help()
+            return 1
+
         syncrypto = Syncrypto(crypto,
                               args.encrypted_folder,
                               args.plaintext_folder,
@@ -558,22 +596,19 @@ def main(args=sys.argv[1:]):
                 else:
                     break
             syncrypto.change_password(newpass1)
-            return 0
         elif args.print_encrypted_tree:
             print(syncrypto.encrypted_tree)
-            return 0
-        elif args.plaintext_folder:
+        elif args.plaintext_folder is not None:
             if args.interval:
                 while True:
                     syncrypto.sync_folder()
                     sleep(args.interval)
             else:
                 syncrypto.sync_folder()
-            return 0
+        return 0
     except DecryptError:
         print("Your password is not correct")
         return 3
     except InvalidFolder as e:
         print(e.args[0])
         return 4
-    return 1

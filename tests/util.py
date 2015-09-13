@@ -182,7 +182,7 @@ if __name__ == "__main__":
     x/y:2
     x/z:11
     w:3
-    .haha
+    .dot_file:dot file
                      """)
     prepare_filetree(folder2, """
     x/z:22
@@ -190,7 +190,7 @@ if __name__ == "__main__":
                      """)
     # cmp2 = dircmp(os.path.join(folder1, "a", "b"),
     #               os.path.join(folder2, "a", "b"))
-    cmp = tree_cmp(folder1, folder2, ignores=[".*"])
-    print(cmp)
+    result = tree_cmp(folder1, folder2, ignores=[".*"])
+    print(result)
     shutil.rmtree(folder1)
     shutil.rmtree(folder2)
