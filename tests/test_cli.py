@@ -433,7 +433,7 @@ class CliTestCase(unittest.TestCase):
             if name.startswith(".") or name.startswith('_'):
                 continue
             encrypted_path = name
-        self.assertIsNotNone(encrypted_path)
+        self.assertFalse(encrypted_path is None)
         os.chdir(self.plain_folder_check)
         self.cli(["--password-file", self.password_file, "--decrypt-file",
                   os.path.join(self.encrypted_folder, encrypted_path)])
@@ -452,7 +452,7 @@ class CliTestCase(unittest.TestCase):
             if name.startswith(".") or name.startswith('_'):
                 continue
             encrypted_path = name
-        self.assertIsNotNone(encrypted_path)
+        self.assertFalse(encrypted_path is None)
         plain_path = os.path.join(self.plain_folder_check, "decrypted_file")
         self.cli(["--password-file", self.password_file, "--decrypt-file",
                   os.path.join(self.encrypted_folder, encrypted_path),
