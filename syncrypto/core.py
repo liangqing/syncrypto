@@ -390,11 +390,19 @@ class Syncrypto:
         file_entry = tree.get(pathname)
         fs_path = file_entry.fs_path(root)
         if os.path.isdir(fs_path):
-            shutil.rmtree(fs_path)
+            # shutil.rmtree(fs_path)
+            if target == "encrypted folder":
+                self._move_to_encrypted_trash(file_entry)
+            elif target == "plaintext folder":
+                self._move_to_plain_trash(file_entry)
             self.info("Delete folder %s in %s." % (file_entry.fs_pathname,
                                                    target))
         elif os.path.exists(fs_path):
-            os.remove(fs_path)
+            # os.remove(fs_path)
+            if target == "encrypted folder":
+                self._move_to_encrypted_trash(file_entry)
+            elif target == "plaintext folder":
+                self._move_to_plain_trash(file_entry)
             self.info("Delete file %s in %s." % (file_entry.fs_pathname,
                                                  target))
         tree.remove(pathname)

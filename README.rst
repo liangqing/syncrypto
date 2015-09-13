@@ -36,11 +36,14 @@ very useful for file based cloud storage service to synchronizing minimal conten
 
 The synchronization is two-way, files not only syncing from plain text folder to
 encrypted folder, but also syncing from encrypted folder to plain text folder.
+``syncrypto`` will choose the newest file.
 
 ``syncrypto`` never delete files, if files or folders should be deleted or over
 written by the syncing algorithm, ``syncrypto`` just move the files or folders
 to the trash, the trash in encrypted folder located at _syncrypto/trash,
-at .syncrypto/trash in plaintext folder
+at .syncrypto/trash in plaintext folder. Files in encrypted folder's trash are
+also encrypted. You can delete any files in trash in any time if you make sure
+the files in it are useless or you can recover it from trash.
 
 
 Installation
@@ -55,7 +58,9 @@ Installation
 * python 3.3
 * python 3.4
 
-you can install it only by:
+you can install it by pip_:
+
+.. _pip: https://pip.pypa.io/en/latest/installing.html
 
 .. code-block:: bash
 
