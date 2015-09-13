@@ -48,12 +48,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--clear-encrypted-folder',
-    action='store_true',
-    help='Clear the files in encrypted folder'
-)
-
-parser.add_argument(
     '--print-encrypted-tree',
     action='store_true',
     help='Print the file tree in encrypted folder'

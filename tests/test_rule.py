@@ -141,7 +141,7 @@ class FileRuleTestCase(unittest.TestCase):
         self.assertEqual(f.test(self.file_entry), 'include')
 
     def regexp_invalid(self):
-        f = FileRule('name', 'regexp', "*.txt", 'include')
+        FileRule('name', 'regexp', "*.txt", 'include')
 
     def test_regexp(self):
         self.file_entry.pathname = "test_file.txt"

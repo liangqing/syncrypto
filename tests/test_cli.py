@@ -330,10 +330,10 @@ class CliTestCase(unittest.TestCase):
                   self.encrypted_folder, self.plain_folder])
         self.cli(["--password", self.password,
                   self.encrypted_folder, self.plain_folder_check])
-        directory_cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
-        self.assertEqual(len(directory_cmp.right_only), 0)
-        self.assertEqual(len(directory_cmp.diff_files), 0)
+        cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(cmp.left_only, ["filename_not_sync"])
+        self.assertEqual(len(cmp.right_only), 0)
+        self.assertEqual(len(cmp.diff_files), 0)
 
     def test_rule_file(self):
         self.clear_folders()
@@ -350,10 +350,10 @@ class CliTestCase(unittest.TestCase):
                   self.encrypted_folder, self.plain_folder])
         self.cli(["--password", self.password,
                   self.encrypted_folder, self.plain_folder_check])
-        directory_cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(directory_cmp.left_only, ["filename_not_sync"])
-        self.assertEqual(len(directory_cmp.right_only), 0)
-        self.assertEqual(len(directory_cmp.diff_files), 0)
+        cmp = self.tree_cmp(self.plain_folder, self.plain_folder_check)
+        self.assertEqual(cmp.left_only, ["filename_not_sync"])
+        self.assertEqual(len(cmp.right_only), 0)
+        self.assertEqual(len(cmp.diff_files), 0)
 
     def test_encrypted_file_name(self):
         self.clear_folders()

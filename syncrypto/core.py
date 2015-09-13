@@ -158,8 +158,6 @@ class Syncrypto:
             return encrypted_file
         if os.path.exists(encrypted_path):
             self._move_to_encrypted_trash(encrypted_file)
-        # if os.path.isdir(encrypted_path):
-        #     shutil.rmtree(encrypted_path)
         directory = os.path.dirname(encrypted_path)
         if not os.path.isdir(directory):
             os.makedirs(directory)
@@ -191,8 +189,6 @@ class Syncrypto:
             return plain_file
         if os.path.exists(plain_path):
             self._move_to_plain_trash(plain_file)
-        # if os.path.isdir(plain_path):
-        #     shutil.rmtree(plain_path)
         directory = os.path.dirname(plain_path)
         if not os.path.isdir(directory):
             os.makedirs(directory)
@@ -390,7 +386,6 @@ class Syncrypto:
         file_entry = tree.get(pathname)
         fs_path = file_entry.fs_path(root)
         if os.path.isdir(fs_path):
-            # shutil.rmtree(fs_path)
             if target == "encrypted folder":
                 self._move_to_encrypted_trash(file_entry)
             elif target == "plaintext folder":
@@ -398,7 +393,6 @@ class Syncrypto:
             self.info("Delete folder %s in %s." % (file_entry.fs_pathname,
                                                    target))
         elif os.path.exists(fs_path):
-            # os.remove(fs_path)
             if target == "encrypted folder":
                 self._move_to_encrypted_trash(file_entry)
             elif target == "plaintext folder":
@@ -517,21 +511,6 @@ class Syncrypto:
         self.crypto.password = newpass
         self._save_encrypted_tree()
 
-    def clear_encrypted_folder(self):
-        encrypted_tree = FileTree.from_fs(self.encrypted_folder)
-        for file_entry in encrypted_tree:
-            fs_pathname = file_entry.pathname.replace(os.path.sep, "/")
-            fs_path = file_entry.fs_path(self.encrypted_folder)
-            if not self.encrypted_tree.has_fs_pathname(fs_pathname):
-                if os.path.isdir(fs_path) and len(os.listdir(fs_path)) <= 0:
-                    os.rmdir(fs_path)
-                else:
-                    path = self._trash_path_in_encrypted_folder()
-                    os.rename(fs_path, path)
-                    parent = os.path.dirname(fs_path)
-                    if len(os.listdir(parent)) <= 0:
-                        os.rmdir(parent)
-
 
 def main(args=sys.argv[1:]):
 
@@ -579,9 +558,6 @@ def main(args=sys.argv[1:]):
                 else:
                     break
             syncrypto.change_password(newpass1)
-            return 0
-        elif args.clear_encrypted_folder:
-            syncrypto.clear_encrypted_folder()
             return 0
         elif args.print_encrypted_tree:
             print(syncrypto.encrypted_tree)

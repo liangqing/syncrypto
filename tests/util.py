@@ -88,7 +88,7 @@ class TreeCmpResult:
         self.diff_files = []
 
     def __str__(self):
-        return "left_only: %s\nright_only: %s\ndiff_files: %s" % \
+        return "left_only: %s\n right_only: %s\n diff_files: %s" % \
                (self.left_only, self.right_only, self.diff_files)
 
 
@@ -97,7 +97,7 @@ def tree_cmp(left, right, pathname="", ignores=None):
     is_dir_right = right is not None and os.path.isdir(right)
     exists_left = left is not None and os.path.exists(left)
     exists_right = right is not None and os.path.exists(right)
-    cmp = TreeCmpResult()
+    cmp_result = TreeCmpResult()
     if is_dir_left and is_dir_right:
         sub_files = list(set(os.listdir(left)+os.listdir(right)))
         for sub_file in sub_files:
@@ -119,14 +119,14 @@ def tree_cmp(left, right, pathname="", ignores=None):
                 tree_cmp(os.path.join(left, sub_file),
                          os.path.join(right, sub_file),
                          sub_pathname)
-            cmp.left_only += sub_cmp.left_only
-            cmp.right_only += sub_cmp.right_only
-            cmp.diff_files += sub_cmp.diff_files
+            cmp_result.left_only += sub_cmp.left_only
+            cmp_result.right_only += sub_cmp.right_only
+            cmp_result.diff_files += sub_cmp.diff_files
     elif is_dir_left:
         if not exists_right:
-            cmp.left_only.append(pathname)
+            cmp_result.left_only.append(pathname)
         else:
-            cmp.diff_files.append(pathname)
+            cmp_result.diff_files.append(pathname)
         sub_files = os.listdir(left)
         for sub_file in sub_files:
             if sub_file == "." or sub_file == "..":
@@ -147,12 +147,12 @@ def tree_cmp(left, right, pathname="", ignores=None):
                 tree_cmp(os.path.join(left, sub_file),
                          None,
                          sub_pathname)
-            cmp.left_only += sub_cmp.left_only
+            cmp_result.left_only += sub_cmp.left_only
     elif is_dir_right:
         if not exists_left:
-            cmp.right_only.append(pathname)
+            cmp_result.right_only.append(pathname)
         else:
-            cmp.diff_files.append(pathname)
+            cmp_result.diff_files.append(pathname)
         sub_files = os.listdir(right)
         for sub_file in sub_files:
             if sub_file == "." or sub_file == "..":
@@ -164,15 +164,15 @@ def tree_cmp(left, right, pathname="", ignores=None):
             sub_cmp = \
                 tree_cmp(None, os.path.join(right, sub_file),
                          sub_pathname)
-            cmp.right_only += sub_cmp.right_only
+            cmp_result.right_only += sub_cmp.right_only
     elif exists_left and exists_right:
         if not file_cmp(left, right, False):
-            cmp.diff_files.append(pathname)
+            cmp_result.diff_files.append(pathname)
     elif exists_left:
-        cmp.left_only.append(pathname)
+        cmp_result.left_only.append(pathname)
     elif exists_right:
-        cmp.right_only.append(pathname)
-    return cmp
+        cmp_result.right_only.append(pathname)
+    return cmp_result
 
 if __name__ == "__main__":
     folder1 = mkdtemp()
