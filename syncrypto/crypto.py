@@ -135,7 +135,7 @@ class Crypto:
         """
         bs = self.block_size
         if file_entry is None:
-            file_entry = FileEntry('.tmp', 0, time(), time(), 0)
+            file_entry = FileEntry('file_entry.tmp', 0, time(), time(), 0)
         if file_entry.salt is None:
             file_entry.salt = os.urandom(bs - 4)
         key, iv = self.gen_key_and_iv(file_entry.salt)
@@ -225,7 +225,11 @@ class Crypto:
             raise DecryptError(
                 "pathname length is not correct, expect %d, got %d" %
                 (pathname_block_size, len(pathname_data)))
-        pathname = decryptor.update(pathname_data)[:pathname_size]
+        pathname_data = decryptor.update(pathname_data)[:pathname_size]
+        try:
+            pathname = pathname_data.decode("utf-8")
+        except UnicodeDecodeError:
+            raise DecryptError()
         md5 = hashlib.md5()
         next_chunk = ''
         finished = False
