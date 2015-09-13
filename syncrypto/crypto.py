@@ -225,7 +225,8 @@ class Crypto:
             raise DecryptError(
                 "pathname length is not correct, expect %d, got %d" %
                 (pathname_block_size, len(pathname_data)))
-        pathname = decryptor.update(pathname_data)[:pathname_size]
+        pathname = (decryptor.update(pathname_data)[:pathname_size])\
+            .decode("utf-8")
         md5 = hashlib.md5()
         next_chunk = ''
         finished = False
