@@ -95,6 +95,12 @@ required dependencies are installed\:
 
     sudo yum install gcc libffi-devel python-devel openssl-devel
 
+For OS X, run\:
+
+.. code-block:: bash
+
+    xcode-select --install
+
 
 Install By pip
 --------------
