@@ -70,10 +70,12 @@ Support Platform
 * python 3.3
 * python 3.4
 
-And support Linux, MacOSX, Windows operating system
+And support Linux, OS X, Windows operating systems
 
 Install Dependencies
 --------------------
+
+**If you using windows, just jump to next**
 
 Because ``syncrypto`` rely on cryptography_, so need to install some
 dependencies before install ``syncrypto``\:

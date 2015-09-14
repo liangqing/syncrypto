@@ -45,6 +45,8 @@ syncrypto - 文件夹加密同步
 
 ### 安装依赖
 
+**如果是Windows的话，可以直接跳过**
+
 由于依赖[cryptography](https://github.com/pyca/cryptography)，在*Linux*上需要先安装一些的依赖: 
 
 在Debian/Ubuntu系列中运行
