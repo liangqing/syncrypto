@@ -30,9 +30,10 @@ from time import sleep, time
 from getpass import getpass
 from lockfile import LockFile
 from random import randint
-from stat import *
+from stat import S_IWUSR, S_IRUSR
 from .crypto import Crypto, DecryptError
-from .filetree import FileTree, FileRuleSet
+from .filetree import FileTree, FileRuleSet, FileEntry
+
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
@@ -51,7 +52,7 @@ class InvalidFolder(Exception):
     pass
 
 
-class Syncrypto:
+class Syncrypto(object):
 
     def __init__(self, crypto, encrypted_folder, plain_folder=None,
                  encrypted_tree=None, plain_tree=None, snapshot_tree=None,
@@ -128,7 +129,7 @@ class Syncrypto:
 
     @staticmethod
     def _generate_trash_name():
-        return datetime.now().isoformat().replace(':', '-')
+        return datetime.now().isoformat().replace(':', '_')
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
@@ -229,7 +230,7 @@ class Syncrypto:
         return conflict_path
 
     def _is_ignore(self, plain_file, encrypted_file):
-        return (self.rule_set.test(plain_file) != 'include' and
+        return (self.rule_set.test(plain_file) != 'include' or
                 self.rule_set.test(encrypted_file) != 'include')
 
     @staticmethod
@@ -396,15 +397,15 @@ class Syncrypto:
                 self._move_to_encrypted_trash(file_entry)
             elif target == "plaintext folder":
                 self._move_to_plain_trash(file_entry)
-            self.info("Delete folder %s in %s." % (file_entry.fs_pathname,
-                                                   target))
+            self.info("Delete folder %s in %s" % (file_entry.fs_pathname,
+                                                  target))
         elif os.path.exists(fs_path):
             if target == "encrypted folder":
                 self._move_to_encrypted_trash(file_entry)
             elif target == "plaintext folder":
                 self._move_to_plain_trash(file_entry)
-            self.info("Delete file %s in %s." % (file_entry.fs_pathname,
-                                                 target))
+            self.info("Delete file %s in %s" % (file_entry.fs_pathname,
+                                                target))
         tree.remove(pathname)
 
     @staticmethod
@@ -496,12 +497,18 @@ class Syncrypto:
         return results
 
     def sync_folder(self):
-        with LockFile(self.encrypted_folder):
-            with LockFile(self.plain_folder):
+        encrypted_folder_lock = LockFile(self.encrypted_folder)
+        if encrypted_folder_lock.is_locked():
+            self.info("Acquiring the lock of encrypted folder...")
+        with encrypted_folder_lock:
+            plain_folder_lock = LockFile(self.plain_folder)
+            if encrypted_folder_lock.is_locked():
+                self.info("Acquiring the lock of plaintext folder...")
+            with plain_folder_lock:
                 self._do_sync_folder()
 
     def change_password(self, newpass):
-        newpass = newpass.encode('ascii')
+        newpass = newpass.encode('utf-8')
         oldpass = self.crypto.password
         if oldpass == newpass:
             raise ChangeTheSamePassword()
@@ -534,6 +541,9 @@ def _generate_tmp_path(folder=None):
 
 
 def decrypt_file(crypto, encrypted_path, plain_path=None):
+    if not os.path.isfile(encrypted_path):
+        print(encrypted_path+" is not a file")
+        return 1
     if plain_path is not None:
         file_entry = crypto.decrypt_file(encrypted_path, plain_path)
     else:
@@ -543,6 +553,29 @@ def decrypt_file(crypto, encrypted_path, plain_path=None):
         os.rename(tmp_path, plain_path)
     os.chmod(plain_path, file_entry.mode)
     os.utime(plain_path, (file_entry.mtime, file_entry.mtime))
+    return 0
+
+
+def encrypt_file(crypto, plain_path, encrypted_path=None):
+    if not os.path.isfile(plain_path):
+        print(plain_path+" is not a file")
+        return 1
+    filename = os.path.basename(plain_path)
+    pos = filename.rfind('.')
+    if pos > 0:
+        name = filename[:pos]
+        ext = filename[pos:]
+    else:
+        name = filename
+        ext = ''
+    file_entry = FileEntry.from_file(plain_path, filename)
+    if encrypted_path is not None:
+        crypto.encrypt_file(plain_path, encrypted_path, file_entry)
+    else:
+        encrypted_path = os.path.join(os.path.dirname(plain_path),
+                                      name+'.encrypted'+ext)
+        crypto.encrypt_file(plain_path, encrypted_path, file_entry)
+    return 0
 
 
 def main(args=sys.argv[1:]):
@@ -576,8 +609,10 @@ def main(args=sys.argv[1:]):
     try:
 
         if args.decrypt_file is not None:
-            decrypt_file(crypto, args.decrypt_file, args.out_file)
-            return 0
+            return decrypt_file(crypto, args.decrypt_file, args.out_file)
+
+        if args.encrypt_file is not None:
+            return encrypt_file(crypto, args.encrypt_file, args.out_file)
 
         if args.encrypted_folder is None:
             parser.print_help()

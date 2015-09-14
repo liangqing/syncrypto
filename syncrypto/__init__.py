@@ -20,4 +20,6 @@ from .filetree import FileEntry, FileTree, FileRule, FileRuleSet, \
 from .crypto import Crypto
 from .core import Syncrypto, InvalidFolder
 from .core import main as cli
-from .package_info import __version__, __author__, __doc__
+from .package_info import __version__, __author__, __doc__ as doc
+
+__doc__ = doc

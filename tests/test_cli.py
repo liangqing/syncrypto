@@ -24,6 +24,7 @@ import os
 import os.path
 import shutil
 from tempfile import mkdtemp, mkstemp
+from filecmp import cmp as file_cmp
 from syncrypto import cli as syncrypto_cli_raw
 from time import time
 from subprocess import Popen, PIPE
@@ -342,15 +343,19 @@ class CliTestCase(unittest.TestCase):
         prepare_filetree(self.plain_folder, '''
             filename_sync: 1
             filename_not_sync: 2
+            filename_not_sync_encrypted: 3
         ''')
         self.cli(["--password-file", self.password_file,
                   "--rule",
                   "exclude: name match *_not_sync",
                   self.encrypted_folder, self.plain_folder])
         self.cli(["--password-file", self.password_file,
+                  "--rule",
+                  "exclude: name match *_encrypted",
                   self.encrypted_folder, self.plain_folder_check])
         cmp_result = self.tree_cmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(cmp_result.left_only, ["filename_not_sync"])
+        self.assertEqual(sorted(cmp_result.left_only),
+                         ["filename_not_sync", "filename_not_sync_encrypted"])
         self.assertEqual(len(cmp_result.right_only), 0)
         self.assertEqual(len(cmp_result.diff_files), 0)
 
@@ -359,18 +364,25 @@ class CliTestCase(unittest.TestCase):
         prepare_filetree(self.plain_folder, '''
             filename_sync: 1
             filename_not_sync: 2
+            filename_not_sync_encrypted: 3
         ''')
         dot_folder = os.path.join(self.plain_folder, ".syncrypto")
+        dot_folder_check = os.path.join(self.plain_folder_check, ".syncrypto")
         if not os.path.exists(dot_folder):
             os.mkdir(dot_folder)
+        if not os.path.exists(dot_folder_check):
+            os.mkdir(dot_folder_check)
         with open(os.path.join(dot_folder, "rules"), 'wb') as f:
             f.write(b'exclude: name match *_not_sync')
+        with open(os.path.join(dot_folder_check, "rules"), 'wb') as f:
+            f.write(b'exclude: name match *_encrypted')
         self.cli(["--password-file", self.password_file,
                   self.encrypted_folder, self.plain_folder])
         self.cli(["--password-file", self.password_file,
                   self.encrypted_folder, self.plain_folder_check])
         cmp_result = self.tree_cmp(self.plain_folder, self.plain_folder_check)
-        self.assertEqual(cmp_result.left_only, ["filename_not_sync"])
+        self.assertEqual(sorted(cmp_result.left_only),
+                         ["filename_not_sync", "filename_not_sync_encrypted"])
         self.assertEqual(len(cmp_result.right_only), 0)
         self.assertEqual(len(cmp_result.diff_files), 0)
 
@@ -434,7 +446,66 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(sorted(cmp_result.right_only),
                          ["files.conflict.txt"])
 
-    def test_decrypt_file_default_plain_path(self):
+    def test_encrypt_file_no_out_file(self):
+        self.clear_folders()
+        prepare_filetree(self.plain_folder, '''
+            test_simple_file: hello
+            ext.txt: with extension
+        ''')
+        self.cli(["--password-file", self.password_file, "--encrypt-file",
+                  os.path.join(self.plain_folder, "test_simple_file")])
+        self.assertTrue(os.path.exists(
+            os.path.join(self.plain_folder, "test_simple_file.encrypted")))
+        self.cli([
+            "--password-file", self.password_file,
+            "--decrypt-file",
+            os.path.join(self.plain_folder, "test_simple_file.encrypted"),
+            "--out-file",
+            os.path.join(self.plain_folder, "test_simple_file_decrypted")
+                  ])
+        self.assertTrue(
+            file_cmp(
+                os.path.join(self.plain_folder, "test_simple_file_decrypted"),
+                os.path.join(self.plain_folder, "test_simple_file"), False))
+
+        self.cli(["--password-file", self.password_file, "--encrypt-file",
+                  os.path.join(self.plain_folder, "ext.txt")])
+        self.assertTrue(os.path.exists(
+            os.path.join(self.plain_folder, "ext.encrypted.txt")))
+        self.cli([
+            "--password-file", self.password_file,
+            "--decrypt-file",
+            os.path.join(self.plain_folder, "ext.encrypted.txt"),
+            "--out-file",
+            os.path.join(self.plain_folder, "ext.decrypted.txt")
+                  ])
+        self.assertTrue(
+            file_cmp(
+                os.path.join(self.plain_folder, "ext.decrypted.txt"),
+                os.path.join(self.plain_folder, "ext.txt"), False))
+
+    def test_encrypt_file_given_out_file(self):
+        self.clear_folders()
+        prepare_filetree(self.plain_folder, '''
+            test_simple_file: hello
+        ''')
+        self.cli(["--password-file", self.password_file, "--encrypt-file",
+                  os.path.join(self.plain_folder, "test_simple_file")])
+        self.assertTrue(os.path.exists(
+            os.path.join(self.plain_folder, "test_simple_file.encrypted")))
+        self.cli([
+            "--password-file", self.password_file,
+            "--decrypt-file",
+            os.path.join(self.plain_folder, "test_simple_file.encrypted"),
+            "--out-file",
+            os.path.join(self.plain_folder, "test_simple_file_decrypted")
+                  ])
+        self.assertTrue(
+            file_cmp(
+                os.path.join(self.plain_folder, "test_simple_file_decrypted"),
+                os.path.join(self.plain_folder, "test_simple_file"), False))
+
+    def test_decrypt_file_no_out_file(self):
         self.clear_folders()
         prepare_filetree(self.plain_folder, '''
             test_simple_file: hello
@@ -456,7 +527,7 @@ class CliTestCase(unittest.TestCase):
             self.assertEqual(f.read(), "hello")
         os.chdir(origin)
 
-    def test_decrypt_file_given_plain_path(self):
+    def test_decrypt_file_given_out_file(self):
         self.clear_folders()
         prepare_filetree(self.plain_folder, '''
             test_simple_file: hello

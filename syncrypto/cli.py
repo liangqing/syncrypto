@@ -18,7 +18,7 @@
 from __future__ import unicode_literals
 import argparse
 import sys
-from .package_info import __doc__
+from .package_info import __doc__ as description
 
 
 fs_encoding = sys.getfilesystemencoding()
@@ -33,7 +33,7 @@ def string(s):
 
 
 parser = argparse.ArgumentParser(
-    description=__doc__
+    description=description
 )
 
 parser.add_argument(
@@ -64,12 +64,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--clear-encrypted-folder',
-    action='store_true',
-    help='Clear the files in encrypted folder'
-)
-
-parser.add_argument(
     '--print-encrypted-tree',
     action='store_true',
     help='Print the file tree in encrypted folder'
@@ -83,9 +77,17 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '--encrypt-file',
+    type=string,
+    help=('Encrypt a file, it will store the result encrypted file in the same '
+          'directory unless you specify --out-file option')
+)
+
+parser.add_argument(
     '--out-file',
     type=string,
-    help='When decrypting a file, specify the output plaintext file path'
+    help=('When encrypting/decrypting a file, '
+          'specify the output file path')
 )
 
 parser.add_argument(
@@ -104,7 +106,7 @@ parser.add_argument(
     '--rule',
     type=string,
     action="append",
-    help='Add file include or exclude rule'
+    help='Add include or exclude rules'
 )
 
 parser.add_argument(

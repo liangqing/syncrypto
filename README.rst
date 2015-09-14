@@ -7,9 +7,15 @@ Synchronize a folder with its encrypted content
 
 .. image:: https://travis-ci.org/liangqing/syncrypto.svg?branch=master
     :target: https://travis-ci.org/liangqing/syncrypto
+    :alt: Build And Test Status
 
 .. image:: https://codecov.io/github/liangqing/syncrypto/coverage.svg?branch=master
     :target: https://codecov.io/github/liangqing/syncrypto?branch=master
+    :alt: Code Coverage
+
+.. image:: https://landscape.io/github/liangqing/syncrypto/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/liangqing/syncrypto/master
+   :alt: Code Health
 
 Introduction
 ============
@@ -43,7 +49,7 @@ written by the syncing algorithm, ``syncrypto`` just move the files or folders
 to the trash, the trash in encrypted folder located at _syncrypto/trash,
 at .syncrypto/trash in plaintext folder. Files in encrypted folder's trash are
 also encrypted. You can delete any files in trash in any time if you make sure
-the files in it are useless or you can recover it from trash.
+the files in it are useless.
 
 
 Installation
@@ -58,7 +64,7 @@ Installation
 * python 3.3
 * python 3.4
 
-and it support all OS platforms(Linux, MacOSX, Windows) that python support
+and it supports all OS platforms(Linux, MacOSX, Windows) that python supports
 
 you can install it by pip_:
 
@@ -79,12 +85,21 @@ Synchronization
 
     syncrypto [encrypted folder] [plaintext folder]
 
-it will prompt you to input a password, if the encrypted folder is empty, 
+It will prompt you to input a password, if the encrypted folder is empty,
 the input password will be set to the encrypted folder, or it will be used
 to verify the password you set before.
 
+If you don't want input password in interactive mode, you can use --password-file
+option\:
+
+.. code-block:: bash
+
+    syncrypto [encrypted folder] [plaintext folder] --password-file [password file path]
+
+The password file contains the password in it.
+
 Notice that the first argument is encrypted folder, and the second one is
-plaintext folder
+plaintext folder.
 
 
 Add rule for Synchronization
@@ -166,9 +181,41 @@ operands:
 * ``regexp``, perform a regular expression match
 
 The unit of value in ``size`` rules are "byte" by default, you can also use
-"K", "M" "G", for example specify the value "2K" means 2046 bytes
+"K", "M" "G", for example specify the value "2K" means 2048 bytes
 
 The format of value in ``ctime``, ``mtime`` is "%Y-%m-%d %H:%M:%S"
+
+Encrypt a file
+--------------
+
+.. code-block:: bash
+
+    syncrypto --encrypt-file [plaintext file path]
+
+This command will encrypt the plaintext file to its parent folder with the filename
+add a "encrypted" word
+
+You can also specify the target encrypted file by --out-file option, such as\:
+
+.. code-block:: bash
+
+    syncrypto --encrypt-file [plaintext file path] --out-file [encrypted file path]
+
+Decrypt a file
+--------------
+
+.. code-block:: bash
+
+    syncrypto --decrypt-file [encrypted file path]
+
+This command will decrypt the encrypted file to *current working directory*
+
+You can also specify the target plaintext file by --out-file option, such as\:
+
+.. code-block:: bash
+
+    syncrypto --decrypt-file [encrypted file path] --out-file [plaintext file path]
+
 
 Change the password
 -------------------
@@ -177,7 +224,8 @@ Change the password
 
     syncrypto --change-password [encrypted folder]
 
-change the password of the encrypted folder
+Change the password of the encrypted folder, this will re-encrypt all files within
+the encrypted folder
 
 
 Show the help

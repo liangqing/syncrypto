@@ -43,7 +43,7 @@ class VersionNotCompatible(Exception):
     pass
 
 
-class Crypto:
+class Crypto(object):
 
     VERSION = 0x1
 
@@ -53,7 +53,7 @@ class Crypto:
 
     def __init__(self, password, key_size=32):
 
-        self.password = password.encode("ascii")
+        self.password = password.encode("utf-8")
         self.key_size = key_size
         self.block_size = 16
 
@@ -171,9 +171,9 @@ class Crypto:
                     if len(in_data) == 0:
                         try:
                             buf.write(compress_obj.flush())
-                            break
-                        finally:
-                            break
+                        except Exception:
+                            pass
+                        break
                     md5.update(in_data)
                     compress_data = compress_obj.compress(in_data)
                     compress_size += len(compress_data)

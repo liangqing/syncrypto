@@ -26,10 +26,6 @@ from datetime import datetime
 import time
 from fnmatch import fnmatch
 try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
-try:
     str = unicode
 except NameError:
     pass
@@ -43,7 +39,7 @@ class InvalidRegularExpression(Exception):
     pass
 
 
-class FileEntry:
+class FileEntry(object):
 
     def __init__(self, pathname, size, ctime, mtime, mode, digest=None,
                  isdir=False, fs_pathname=None, salt=None):
@@ -125,7 +121,7 @@ class FileEntry:
                 "mtime", "mode", "digest", "fs_pathname", "salt"]
 
 
-class FileRule:
+class FileRule(object):
 
     _OP_MAP = {
         ">": "gt",
@@ -241,7 +237,7 @@ class FileRule:
         return cls(**d)
 
 
-class FileRuleSet:
+class FileRuleSet(object):
 
     _RULE_STRING_REGEXP = re.compile(
         r"\s*(\w+)\s+(\S+)\s+(\".+\"|'.+'|.+)\s*")
@@ -287,7 +283,7 @@ class FileRuleSet:
                         action)
 
 
-class FileTree:
+class FileTree(object):
 
     def __init__(self, table=None):
         self._table = table
