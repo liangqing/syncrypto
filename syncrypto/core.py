@@ -460,7 +460,7 @@ class Syncrypto(object):
                 self.info("Decrypt %s to %s." %
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
             elif action == "same":
-                self.info("%s and %s equal" %
+                self.info("%s and %s are identical" %
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
             elif action == 'conflict':
                 if plain_file.isdir and encrypted_file.isdir:
@@ -502,7 +502,7 @@ class Syncrypto(object):
             self.info("Acquiring the lock of encrypted folder...")
         with encrypted_folder_lock:
             plain_folder_lock = LockFile(self.plain_folder)
-            if encrypted_folder_lock.is_locked():
+            if plain_folder_lock.is_locked():
                 self.info("Acquiring the lock of plaintext folder...")
             with plain_folder_lock:
                 self._do_sync_folder()

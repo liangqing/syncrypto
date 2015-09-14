@@ -44,6 +44,9 @@ The synchronization is two-way, files not only syncing from plain text folder to
 encrypted folder, but also syncing from encrypted folder to plain text folder.
 ``syncrypto`` will choose the newest file.
 
+If conflict happens, ``syncrypto`` will rename the plaintext file(add 'conflict'
+word in it), and sync the encrypted file.
+
 ``syncrypto`` never delete files, if files or folders should be deleted or over
 written by the syncing algorithm, ``syncrypto`` just move the files or folders
 to the trash, the trash in encrypted folder located at _syncrypto/trash,
@@ -55,6 +58,9 @@ the files in it are useless.
 Installation
 ============
 
+Support Platform
+----------------
+
 ``syncrypto`` supports both python 2 and python 3, and is tested_ in:
 
 .. _tested: https://travis-ci.org/liangqing/syncrypto
@@ -64,9 +70,36 @@ Installation
 * python 3.3
 * python 3.4
 
-and it supports all OS platforms(Linux, MacOSX, Windows) that python supports
+And support Linux, MacOSX, Windows operating system
 
-you can install it by pip_:
+Install Dependencies
+--------------------
+
+Because ``syncrypto`` rely on cryptography_, so need to install some
+dependencies before install ``syncrypto``\:
+
+.. _cryptography: https://github.com/pyca/cryptography
+
+For Debian and Ubuntu, the following command will ensure that the required
+dependencies are installed\:
+
+.. code-block:: bash
+
+    sudo apt-get install build-essential libssl-dev libffi-dev python-dev
+
+
+For Fedora and RHEL-derivatives, the following command will ensure that the
+required dependencies are installed\:
+
+.. code-block:: bash
+
+    sudo yum install gcc libffi-devel python-devel openssl-devel
+
+
+Install By pip
+--------------
+
+After installing all dependencies, you can install ``syncrypto`` by pip_\:
 
 .. _pip: https://pip.pypa.io/en/latest/installing.html
 
@@ -87,7 +120,8 @@ Synchronization
 
 It will prompt you to input a password, if the encrypted folder is empty,
 the input password will be set to the encrypted folder, or it will be used
-to verify the password you set before.
+to verify the password you set before (take it easy, ``syncrypto`` never store
+plaintext password)
 
 If you don't want input password in interactive mode, you can use --password-file
 option\:
@@ -105,7 +139,9 @@ plaintext folder.
 Add rule for Synchronization
 ----------------------------
 
-If you want ignore files while synchronizing, you can add rule\:
+Sometimes, it is unnecessary to encrypt and sync some files
+(for example, some temporary files),
+if you want ignore these files, you can add rule\:
 
 .. code-block:: bash
 
