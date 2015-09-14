@@ -66,7 +66,7 @@ class Syncrypto:
         self.rule_set = rule_set
         self._debug = debug
         self._encrypted_folder_is_new = False
-        self._trash_name = datetime.now().isoformat()
+        self._trash_name = self._generate_trash_name()
         self._snapshot_trash_name = None
 
         if not os.path.isdir(self.encrypted_folder):
@@ -125,6 +125,10 @@ class Syncrypto:
     @staticmethod
     def info(message):
         print(message)
+
+    @staticmethod
+    def _generate_trash_name():
+        return datetime.now().isoformat().replace(':', '-')
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
@@ -488,7 +492,7 @@ class Syncrypto:
                    "and plaintext folder %s") % (
             self.encrypted_folder, self.plain_folder
         ))
-        self._trash_name = datetime.now().isoformat()
+        self._trash_name = self._generate_trash_name()
         return results
 
     def sync_folder(self):
@@ -555,7 +559,8 @@ def main(args=sys.argv[1:]):
     password = None
 
     if args.password_file is not None and os.path.exists(args.password_file):
-        password = open(args.password_file).read()
+        with open(args.password_file) as f:
+            password = f.read()
 
     rule_set = FileRuleSet()
 

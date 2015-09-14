@@ -447,11 +447,14 @@ class CliTestCase(unittest.TestCase):
                 continue
             encrypted_path = name
         self.assertFalse(encrypted_path is None)
+        origin = os.getcwd()
         os.chdir(self.plain_folder_check)
         self.cli(["--password-file", self.password_file, "--decrypt-file",
                   os.path.join(self.encrypted_folder, encrypted_path)])
         self.assertTrue(os.path.exists("test_simple_file"))
-        self.assertEqual(open("test_simple_file").read(), "hello")
+        with open("test_simple_file") as f:
+            self.assertEqual(f.read(), "hello")
+        os.chdir(origin)
 
     def test_decrypt_file_given_plain_path(self):
         self.clear_folders()
@@ -470,9 +473,12 @@ class CliTestCase(unittest.TestCase):
         self.cli(["--password-file", self.password_file, "--decrypt-file",
                   os.path.join(self.encrypted_folder, encrypted_path),
                   '--out-file', plain_path])
+        origin = os.getcwd()
         os.chdir(self.plain_folder_check)
         self.assertTrue(os.path.exists("decrypted_file"))
-        self.assertEqual(open("decrypted_file").read(), "hello")
+        with open("decrypted_file") as f:
+            self.assertEqual(f.read(), "hello")
+        os.chdir(origin)
 
     def test_pass_wrong_arguments(self):
         self.clear_folders()
