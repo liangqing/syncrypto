@@ -10,13 +10,13 @@ syncrypto - 文件夹加密同步
 一般来说，可以这样使用：
 
 ```
-            syncrypto                syncrypto
-文件夹A  <-------------> 加密文件夹B <-----------> 文件夹C
- 机器X         (可以放在不安全的地方，例如云存储)     机器Y
+                 syncrypto                         syncrypto
+文件夹A  <---------------------> 加密文件夹B <-------------------> 文件夹C
+ 机器X              (可以放在不安全的地方，例如云存储                机器Y
 
 ```
 
-加密文件夹B中的文件都是加密过的，所以可以把它放在不怎么安全的地方（例如云盘，公共硬盘盘等）
+加密文件夹B中的文件都是加密过的，所以可以把它放在不怎么安全的地方（例如云盘，公共硬盘等）
 
 明文文件和加密文件是一一对应的关系，所以每次同步只会添加（删除/修改）那些需要的文件，这样
 很适合那些基于文件系统的同步工具，例如云盘、rsync等。
@@ -27,8 +27,8 @@ syncrypto - 文件夹加密同步
 如果有冲突的话，`syncrypto`会将明文文件重命名（加上单词conflict），然后将密文文件同步过来
 
 `syncrypto`是不会删除文件的，如果同步过程中需要删除或者覆盖文件，`syncrypto`会将文件移动
-到废纸篓里面。在密文文件夹的废纸篓在_syncrypto/trash子目录下，明文文件夹的废纸篓在
-.syncrypto/trash下。密文文件夹里面的废纸篓里面的文件一样是加密的。
+到废纸篓里面。密文文件夹的废纸篓在_syncrypto/trash下，明文文件夹的废纸篓在
+.syncrypto/trash下。密文文件夹废纸篓里面的文件一样是加密过的。
 
 ## 安装
 
@@ -45,7 +45,7 @@ syncrypto - 文件夹加密同步
 
 ### 安装依赖
 
-由于依赖[cryptography](https://github.com/pyca/cryptography)，在*Linux*上需要先安装一些`cryptography`的依赖: 
+由于依赖[cryptography](https://github.com/pyca/cryptography)，在*Linux*上需要先安装一些的依赖: 
 
 在Debian/Ubuntu系列中运行
 ```bash
@@ -183,7 +183,7 @@ syncrypto --encrypt-file [明文文件路径] --out-file [加密后文件路径]
 syncrypto --decrypt-file [文件路径]
 ```
 
-这条命令默认会将解密后的文件**当前目录下**，如果想放到别的地方，同样可以加上--out-file
+这条命令默认会将解密后的文件放在**当前目录下**，如果想放到别的地方，同样可以加上--out-file
 参数:
 
 ```bash
