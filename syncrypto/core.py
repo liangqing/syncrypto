@@ -425,8 +425,8 @@ class Syncrypto(object):
         pathnames.sort()
         encrypted_remove_list = []
         plain_remove_list = []
-        self.info(("Start synchronizing between encrypted folder %s "
-                   "and plaintext folder %s") % (
+        self.info(("Start synchronizing between encrypted folder '%s' "
+                   "and plaintext folder '%s'") % (
             self.encrypted_folder, self.plain_folder
         ))
         self.debug("encrypted_tree:")
@@ -489,8 +489,8 @@ class Syncrypto(object):
         self.debug(self.plain_tree)
         self.snapshot_tree = self.encrypted_tree
         self._save_trees()
-        self.info(("Finish synchronizing between encrypted folder %s "
-                   "and plaintext folder %s") % (
+        self.info(("Finish synchronizing between encrypted folder '%s' "
+                   "and plaintext folder '%s'") % (
             self.encrypted_folder, self.plain_folder
         ))
         self._trash_name = self._generate_trash_name()
