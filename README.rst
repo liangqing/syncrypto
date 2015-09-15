@@ -24,7 +24,7 @@ corresponding encrypted content.
 
 The most common scenario is\:
 
-.. code-block::
+.. code-block:: text
 
                          syncrypto                         syncrypto
   plaintext folder A  <-------------> encrypted folder B <-----------> plaintext folder C
@@ -170,7 +170,7 @@ later, if a rule matches, the matching process will returned immediately.
 
 You can add rules in a file looks like\:
 
-.. code-block::
+.. code-block:: text
 
     include: name eq README.md
 
@@ -193,7 +193,7 @@ in file.
 
 The format of a rule:
 
-.. code-block::
+.. code-block:: text
 
     [action]: [file attribute] [operand] [value]
 
