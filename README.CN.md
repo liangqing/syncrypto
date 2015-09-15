@@ -12,7 +12,7 @@ syncrypto - 文件夹加密同步
 ```
                  syncrypto                         syncrypto
 文件夹A  <---------------------> 加密文件夹B <-------------------> 文件夹C
- 机器X              (可以放在不安全的地方，例如云存储                机器Y
+ 机器X              (可以放在不安全的地方，例如云存储)                机器Y
 
 ```
 
@@ -47,7 +47,7 @@ syncrypto - 文件夹加密同步
 
 **如果是Windows的话，可以直接跳过**
 
-由于依赖[cryptography](https://github.com/pyca/cryptography)，在*Linux*上需要先安装一些的依赖: 
+由于依赖[cryptography](https://github.com/pyca/cryptography)，在*Linux*上需要先安装一些依赖: 
 
 在Debian/Ubuntu系列中运行
 ```bash

@@ -18,7 +18,7 @@
 Synchronize a folder with its encrypted content
 """
 __title__ = "syncrypto"
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 __author__ = 'Qing Liang'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2015 Qing Liang (https://github.com/liangqing)'

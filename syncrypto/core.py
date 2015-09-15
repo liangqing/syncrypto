@@ -241,7 +241,7 @@ class Syncrypto(object):
             return file_entry.digest != snapshot_file.digest
         return \
             file_entry.size != snapshot_file.size or \
-            file_entry.mtime - snapshot_file.mtime > 0.5
+            abs(file_entry.mtime - snapshot_file.mtime) > 0.5
 
     def _compare_file(self, encrypted_file, plain_file, snapshot_file):
         if self._is_ignore(plain_file, encrypted_file):

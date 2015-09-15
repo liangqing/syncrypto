@@ -75,7 +75,7 @@ And support Linux, OS X, Windows operating systems
 Install Dependencies
 --------------------
 
-**If you using windows, just jump to next**
+**If you are using windows, just jump to next**
 
 Because ``syncrypto`` rely on cryptography_, so need to install some
 dependencies before install ``syncrypto``\:
