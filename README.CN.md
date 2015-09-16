@@ -1,5 +1,5 @@
-syncrypto - 文件夹加密同步
-========================
+syncrypto - 文件夹加密双向同步
+==============================
 
 [![最新版本](https://img.shields.io/pypi/v/syncrypto.svg)](https://pypi.python.org/pypi/syncrypto/)[![集成测试](https://travis-ci.org/liangqing/syncrypto.svg?branch=master)](https://travis-ci.org/liangqing/syncrypto)[![代码覆盖率](https://codecov.io/github/liangqing/syncrypto/coverage.svg?branch=master)](https://codecov.io/github/liangqing/syncrypto?branch=master)[![代码健康度](https://landscape.io/github/liangqing/syncrypto/master/landscape.svg?style=flat)](https://landscape.io/github/liangqing/syncrypto/master)
 
