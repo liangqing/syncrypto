@@ -40,7 +40,7 @@ modified in the encrypted folder after synchronization. This make sure the
 synchronization only changes the necessary content in encrypted folder, and is
 very useful for file based cloud storage service to synchronizing minimal contents.
 
-The synchronization is two-way, files not only syncing from plain text folder to
+**The synchronization is two-way**, files not only syncing from plain text folder to
 encrypted folder, but also syncing from encrypted folder to plain text folder.
 ``syncrypto`` will choose the newest file.
 
@@ -69,6 +69,7 @@ Support Platform
 * python 2.7
 * python 3.3
 * python 3.4
+* python 3.5
 
 And support Linux, OS X, Windows operating systems
 
