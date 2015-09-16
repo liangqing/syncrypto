@@ -28,6 +28,7 @@ from filecmp import cmp as file_cmp
 from syncrypto import cli as syncrypto_cli_raw
 from time import time
 from subprocess import Popen, PIPE
+import pexpect
 from util import clear_folder, prepare_filetree, tree_cmp
 
 try:
@@ -79,7 +80,12 @@ class CliTestCase(unittest.TestCase):
     def pipe(self, args):
         os.chdir(os.path.dirname(os.path.dirname(__file__)))
         args = ["python", "-m", "syncrypto"] + args
-        return Popen(args, stdout=PIPE, stdin=PIPE)
+        return Popen(args, stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
+    def pexpect(self, args):
+        os.chdir(os.path.dirname(os.path.dirname(__file__)))
+        args = ["python", "-m", "syncrypto"] + args
+        return pexpect.spawn(" ".join(args))
 
     def check_result_after_sync(self):
         self.cli(["--password-file", self.password_file, self.encrypted_folder,
@@ -138,6 +144,26 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(syncrypto_cli(["--password-file", path,
                                         self.encrypted_folder,
                                         self.plain_folder]), 3)
+
+    def test_interactive_input_password(self):
+        self.cli(["--password-file", self.password_file, self.encrypted_folder,
+                  self.plain_folder])
+        child = self.pexpect([self.encrypted_folder, self.plain_folder])
+        child.expect("password:")
+        child.sendline("password test")
+        child.expect(pexpect.EOF)
+        child.close()
+        self.assertEqual(child.exitstatus, 0)
+
+    def test_interactive_invalid_password(self):
+        self.cli(["--password-file", self.password_file, self.encrypted_folder,
+                  self.plain_folder])
+        child = self.pexpect([self.encrypted_folder, self.plain_folder])
+        child.expect("password:")
+        child.sendline("wrong password")
+        child.expect(pexpect.EOF)
+        child.close()
+        self.assertEqual(child.exitstatus, 3)
 
     def test_basic_sync(self):
         self.clear_folders()
