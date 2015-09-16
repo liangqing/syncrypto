@@ -40,7 +40,7 @@ except ImportError:
 FS_ENCODING = sys.getfilesystemencoding()
 py3 = sys.version_info[0] == 3
 py2 = sys.version_info[0] == 2
-py2_6 = (sys.version_info.major == 2 and sys.version_info.minor == 6)
+py2_6 = (sys.version_info[0] == 2 and sys.version_info[1] == 6)
 is_win = (os.name == "nt")
 
 
