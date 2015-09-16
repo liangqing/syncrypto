@@ -81,7 +81,7 @@ class CliTestCase(unittest.TestCase):
 
     def pipe(self, args):
         os.chdir(os.path.dirname(os.path.dirname(__file__)))
-        if py2_6:
+        if not py2_6:
             args = ["python", "-m", "syncrypto"] + args
         else:
             args = ["python", "-m", "syncrypto.__main__"] + args
