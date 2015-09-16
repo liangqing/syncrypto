@@ -81,15 +81,18 @@ class CliTestCase(unittest.TestCase):
 
     def pipe(self, args):
         os.chdir(os.path.dirname(os.path.dirname(__file__)))
-        if not py2_6:
-            args = ["python", "-m", "syncrypto"] + args
-        else:
+        if py2_6:
             args = ["python", "-m", "syncrypto.__main__"] + args
+        else:
+            args = ["python", "-m", "syncrypto"] + args
         return Popen(args, stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
     def pexpect(self, args):
         os.chdir(os.path.dirname(os.path.dirname(__file__)))
-        args = ["python", "-m", "syncrypto"] + args
+        if py2_6:
+            args = ["python", "-m", "syncrypto.__main__"] + args
+        else:
+            args = ["python", "-m", "syncrypto"] + args
         return pexpect.spawn(" ".join(args))
 
     def check_result_after_sync(self):
