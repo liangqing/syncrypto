@@ -61,7 +61,7 @@ Installation
 Support Platform
 ----------------
 
-``syncrypto`` supports both python 2 and python 3, and is tested_ in:
+``syncrypto`` supports both python 2 and python 3, and is tested_ in\:
 
 .. _tested: https://travis-ci.org/liangqing/syncrypto
 
@@ -77,7 +77,7 @@ Install Dependencies
 
 **If you are using windows, just jump to next**
 
-Because ``syncrypto`` rely on cryptography_, so need to install some
+Because ``syncrypto`` rely on cryptography_ , so need to install some
 dependencies before install ``syncrypto``\:
 
 .. _cryptography: https://github.com/pyca/cryptography
@@ -107,7 +107,7 @@ For OS X, run\:
 Install By pip
 --------------
 
-After installing all dependencies, you can install ``syncrypto`` by pip_\:
+After installing all dependencies, you can install ``syncrypto`` by pip_ \:
 
 .. _pip: https://pip.pypa.io/en/latest/installing.html
 
@@ -177,7 +177,7 @@ You can add rules in a file looks like\:
     # ignore all markdown files, this is a comment
     ignore: name match *.md
 
-and use the rules by "--rule-file" option:
+and use the rules by "--rule-file" option\:
 
 .. code-block:: bash
 
@@ -191,7 +191,7 @@ If you give some rules in command line, and write some rules in rule file at
 the same time, the rules in command line will have higher priority than rules
 in file.
 
-The format of a rule:
+The format of a rule\:
 
 .. code-block:: text
 
@@ -205,7 +205,7 @@ file matching the rule will not syncing.
 ``ignore`` equals ``exclude``.
 
 ``syncrypto`` supports a lot of file attributes while matching rules, the complete
-list is:
+list is\:
 
 * ``name``, the name of the file, include file extension.
 * ``path``, the relative path from the root of the plaintext folder.
@@ -213,7 +213,7 @@ list is:
 * ``ctime``, the change time of the file, (in windows, it is creation time)
 * ``mtime``, the modification time of the file
 
-operands:
+operands\:
 
 * ``eq``, ``==``
 * ``gt``, ``>``
@@ -252,7 +252,7 @@ Decrypt a file
 
     syncrypto --decrypt-file [encrypted file path]
 
-This command will decrypt the encrypted file to *current working directory*
+This command will decrypt the encrypted file to **current working directory**
 
 You can also specify the target plaintext file by --out-file option, such as\:
 

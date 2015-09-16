@@ -28,7 +28,7 @@ import json
 from datetime import datetime
 from time import sleep, time
 from getpass import getpass
-from lockfile import LockFile
+from lockfile.mkdirlockfile import MkdirLockFile as LockFile
 from random import randint
 from stat import S_IWUSR, S_IRUSR
 from .crypto import Crypto, DecryptError
@@ -500,11 +500,17 @@ class Syncrypto(object):
         encrypted_folder_lock = LockFile(self.encrypted_folder)
         if encrypted_folder_lock.is_locked():
             self.info("Acquiring the lock of encrypted folder...")
+        else:
+            self.debug("Encrypted folder is not locked")
         with encrypted_folder_lock:
+            self.debug("Acquired the encrypted folder's lock")
             plain_folder_lock = LockFile(self.plain_folder)
             if plain_folder_lock.is_locked():
                 self.info("Acquiring the lock of plaintext folder...")
+            else:
+                self.debug("Plaintext folder is not locked")
             with plain_folder_lock:
+                self.debug("Acquired the plaintext folder's lock")
                 self._do_sync_folder()
 
     def change_password(self, newpass):
