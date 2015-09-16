@@ -40,6 +40,8 @@ except ImportError:
 FS_ENCODING = sys.getfilesystemencoding()
 py3 = sys.version_info[0] == 3
 py2 = sys.version_info[0] == 2
+py2_6 = (sys.version_info.major == 2 and sys.version_info.minor == 6)
+is_win = (os.name == "nt")
 
 
 def syncrypto_cli(args):
@@ -79,7 +81,10 @@ class CliTestCase(unittest.TestCase):
 
     def pipe(self, args):
         os.chdir(os.path.dirname(os.path.dirname(__file__)))
-        args = ["python", "-m", "syncrypto"] + args
+        if py2_6:
+            args = ["python", "-m", "syncrypto"] + args
+        else:
+            args = ["python", "-m", "syncrypto.__main__"] + args
         return Popen(args, stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
     def pexpect(self, args):
@@ -146,6 +151,8 @@ class CliTestCase(unittest.TestCase):
                                         self.plain_folder]), 3)
 
     def test_interactive_input_password(self):
+        if is_win:
+            return
         self.cli(["--password-file", self.password_file, self.encrypted_folder,
                   self.plain_folder])
         child = self.pexpect([self.encrypted_folder, self.plain_folder])
@@ -156,6 +163,8 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(child.exitstatus, 0)
 
     def test_interactive_invalid_password(self):
+        if is_win:
+            return
         self.cli(["--password-file", self.password_file, self.encrypted_folder,
                   self.plain_folder])
         child = self.pexpect([self.encrypted_folder, self.plain_folder])
