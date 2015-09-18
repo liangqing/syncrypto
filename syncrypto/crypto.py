@@ -161,17 +161,19 @@ class Crypto(object):
         finished = False
         md5 = hashlib.md5()
         rest = b''
+        end = False
         while not finished:
             if compress_obj is not None:
-                buf = BytesIO(rest)
-                should_read = self.BUFFER_SIZE - len(rest)
-                compress_size = 0
-                while compress_size < should_read:
+                buf = BytesIO()
+                buf.write(rest)
+                compress_size = len(rest)
+                while compress_size < self.BUFFER_SIZE:
                     in_data = in_fd.read(self.BUFFER_SIZE)
                     if len(in_data) == 0:
+                        end = True
                         try:
                             buf.write(compress_obj.flush())
-                        except Exception:
+                        except Exception as e:
                             pass
                         break
                     md5.update(in_data)
@@ -179,8 +181,16 @@ class Crypto(object):
                     compress_size += len(compress_data)
                     buf.write(compress_data)
                 data = buf.getvalue()
-                chunk = data[:self.BUFFER_SIZE]
-                rest = data[self.BUFFER_SIZE:]
+                data_size = len(data)
+                if end:
+                    chunk = data
+                elif data_size < self.BUFFER_SIZE:
+                    rest_size = data_size % bs
+                    chunk = data[:-rest_size]
+                    rest = data[-rest_size:]
+                else:
+                    chunk = data[:self.BUFFER_SIZE]
+                    rest = data[self.BUFFER_SIZE:]
             else:
                 chunk = in_fd.read(self.BUFFER_SIZE)
                 md5.update(chunk)
@@ -244,36 +254,36 @@ class Crypto(object):
         footer = None
         while not finished:
             chunk, next_chunk = next_chunk, in_fd.read(self.BUFFER_SIZE)
-            if chunk:
-                plaintext = decryptor.update(chunk)
-                if len(next_chunk) == 0:
-                    plaintext += decryptor.finalize()
-                    entire_digest = plaintext[-16:]
-                    footer = plaintext[-footer_size:-16]
-                    file_entry = self._unpack_footer(pathname, footer)
-                    padding_length = \
-                        bytearray(plaintext[-footer_size-1:-footer_size])[0]
-                    plaintext = plaintext[:-padding_length-footer_size]
-                    finished = True
+            if not chunk:
+                continue
+            plaintext = decryptor.update(chunk)
+            if len(next_chunk) == 0:
+                plaintext += decryptor.finalize()
+                entire_digest = plaintext[-16:]
+                footer = plaintext[-footer_size:-16]
+                file_entry = self._unpack_footer(pathname, footer)
+                padding_length = \
+                    bytearray(plaintext[-footer_size-1:-footer_size])[0]
+                plaintext = plaintext[:-padding_length-footer_size]
+                finished = True
+            if decompress_obj is not None:
+                decompress_error = False
+                try:
+                    plaintext = decompress_obj.decompress(plaintext)
+                except zlib.error as e:
+                    decompress_error = True
+                if decompress_error:
+                    raise DecryptError()
+            md5.update(plaintext)
+            out_fd.write(plaintext)
+            if finished:
                 if decompress_obj is not None:
-                    decompress_error = False
-                    try:
-                        plaintext = decompress_obj.decompress(plaintext)
-                    except zlib.error:
-                        decompress_error = True
-                    if decompress_error:
-                        raise DecryptError()
-                md5.update(plaintext)
-                out_fd.write(plaintext)
-                if finished:
-                    content_digest_check = md5.digest()
-                    md5.update(footer)
-                    entire_digest_check = md5.digest()
-
-        if decompress_obj is not None:
-            rest = decompress_obj.flush()
-            md5.update(rest)
-            out_fd.write(rest)
+                    rest = decompress_obj.flush()
+                    md5.update(rest)
+                    out_fd.write(rest)
+                content_digest_check = md5.digest()
+                md5.update(footer)
+                entire_digest_check = md5.digest()
 
         if file_entry is None or entire_digest is None \
                 or entire_digest_check is None or content_digest_check is None:

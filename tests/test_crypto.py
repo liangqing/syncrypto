@@ -23,6 +23,13 @@ import os
 import os.path
 from tempfile import mkstemp
 from syncrypto import FileEntry, Crypto
+import hashlib
+import binascii
+
+
+def _hex(data):
+    return binascii.hexlify(data)
+
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -74,7 +81,7 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = BytesIO()
         middle_fd = BytesIO()
         out_fd = BytesIO()
-        in_fd.write(os.urandom(1024*1024))
+        in_fd.write(os.urandom(1024 * 1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry)
         middle_fd.seek(0)
@@ -96,7 +103,7 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = BytesIO()
         out_fd1 = BytesIO()
         out_fd2 = BytesIO()
-        in_fd.write(os.urandom(1024))
+        in_fd.write(os.urandom(1024 * 1024))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, out_fd1, self.file_entry)
         in_fd.seek(0)
@@ -107,7 +114,31 @@ class CryptoTestCase(unittest.TestCase):
         in_fd = BytesIO()
         middle_fd = BytesIO()
         out_fd = BytesIO()
+        in_fd.write(os.urandom(1024 * 1024))
+        in_fd.seek(0)
+        self.crypto.compress_fd(in_fd, middle_fd)
+        middle_fd.seek(0)
+        self.crypto.decompress_fd(middle_fd, out_fd)
+        self.assertEqual(in_fd.getvalue(), out_fd.getvalue())
+
+    def test_encrypted_compress(self):
+        in_fd = BytesIO()
+        middle_fd = BytesIO()
+        out_fd = BytesIO()
         in_fd.write(os.urandom(1024))
+        in_fd.seek(0)
+        self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry,
+                               Crypto.COMPRESS)
+        middle_fd.seek(0)
+        self.crypto.decrypt_fd(middle_fd, out_fd)
+        self.assertEqual(in_fd.getvalue(), out_fd.getvalue())
+
+    def test_encrypted_compress_large(self):
+        in_fd = BytesIO()
+        middle_fd = BytesIO()
+        out_fd = BytesIO()
+        data = "\n".join([str(x) for x in range(1000000, 1000000+8*1024+39)])
+        in_fd.write(data.encode("ascii"))
         in_fd.seek(0)
         self.crypto.encrypt_fd(in_fd, middle_fd, self.file_entry,
                                Crypto.COMPRESS)
