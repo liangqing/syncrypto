@@ -473,6 +473,9 @@ class Syncrypto(object):
                 self.plain_tree.set(pathname, plain_file)
                 self.info("Has conflict between %s and %s!" %
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
+            elif action == 'ignore':
+                if encrypt_file is not None:
+                    encrypted_remove_list.append(pathname)
             results.append((action, pathname))
 
         for pathname in encrypted_remove_list:
