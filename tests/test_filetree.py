@@ -25,6 +25,8 @@ from tempfile import mkstemp, mkdtemp
 from syncrypto import FileEntry, FileTree
 from time import time
 from util import prepare_filetree
+from syncrypto.util import file_hexlify_digest, file_digest, hexlify
+
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -76,7 +78,7 @@ class FileEntryTestCase(unittest.TestCase):
             'ctime': stat.st_ctime,
             'mtime': stat.st_mtime,
             'mode': stat.st_mode,
-            'digest': None,
+            'digest': file_hexlify_digest(self.file_path),
             'isdir': False,
             'salt': None
         }
@@ -92,11 +94,12 @@ class FileEntryTestCase(unittest.TestCase):
             'ctime': int(time()),
             'mtime': stat.st_mtime,
             'mode': stat.st_mode,
-            'digest': None,
+            'digest': file_digest(self.file_path),
             'isdir': False,
             'salt': None
         }
         file_object = FileEntry(**d)
+        d['digest'] = hexlify(d['digest'])
         self.assertEqual(d, file_object.to_dict())
 
 

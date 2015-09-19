@@ -173,7 +173,7 @@ class Crypto(object):
                         end = True
                         try:
                             buf.write(compress_obj.flush())
-                        except Exception as e:
+                        except Exception:
                             pass
                         break
                     md5.update(in_data)
@@ -270,7 +270,7 @@ class Crypto(object):
                 decompress_error = False
                 try:
                     plaintext = decompress_obj.decompress(plaintext)
-                except zlib.error as e:
+                except zlib.error:
                     decompress_error = True
                 if decompress_error:
                     raise DecryptError()

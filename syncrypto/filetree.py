@@ -25,10 +25,7 @@ import re
 from datetime import datetime
 import time
 from fnmatch import fnmatch
-try:
-    str = unicode
-except NameError:
-    pass
+from .util import unicode_text, file_digest
 
 
 class InvalidRuleString(Exception):
@@ -56,11 +53,11 @@ class FileEntry(object):
     def __str__(self):
         t = datetime.fromtimestamp(self.mtime)
         if self.isdir:
-            return " ".join(['directory',
-                             self.pathname, ':', str(t), self.fs_pathname])
+            return " ".join(['directory', self.pathname, ':',
+                             unicode_text(t), self.fs_pathname])
         else:
-            return " ".join(['file',
-                             self.pathname, ':', str(t), self.fs_pathname])
+            return " ".join(['file', self.pathname, ':',
+                             unicode_text(t), self.fs_pathname])
 
     def name(self):
         return (self.split())[1]
@@ -96,7 +93,8 @@ class FileEntry(object):
         self.size = target.size
         self.ctime = target.ctime
         self.mtime = target.mtime
-        self.mode = target.mode
+        if target.mode is not None:
+            self.mode = target.mode
         self.salt = target.salt
         self.digest = target.digest
 
@@ -111,9 +109,17 @@ class FileEntry(object):
     @classmethod
     def from_file(cls, path, pathname):
         stat = os.stat(path)
-        return cls(pathname, stat.st_size, stat.st_ctime, stat.st_mtime,
-                   stat.st_mode, isdir=os.path.isdir(path),
-                   fs_pathname=pathname)
+        mode = stat.st_mode
+        if os.name == 'nt':
+            mode = None
+        size = stat.st_size
+        isdir = os.path.isdir(path)
+        digest = None
+        if not isdir and size <= 1024 * 1024:
+            digest = file_digest(path)
+        return cls(pathname, size, stat.st_ctime, stat.st_mtime,
+                   mode, isdir=isdir,
+                   fs_pathname=pathname, digest=digest)
 
     @staticmethod
     def properties():
@@ -147,7 +153,7 @@ class FileRule(object):
             raise ValueError("Unsupported file filter attribute: "+attr)
         self.attr = attr
         if attr == 'size':
-            value = str(value).lower()
+            value = unicode_text(value).lower()
             unit = value[-1]
             if unit == 'g':
                 self.value = int(value[:-1]) << 30
@@ -357,7 +363,7 @@ class FileTree(object):
         s = ""
         for key in table:
             item = table[key]
-            s += "\t" + str(item)
+            s += "\t" + unicode_text(item)+"\n"
         return s
 
     def to_dict(self):
