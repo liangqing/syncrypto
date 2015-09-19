@@ -482,14 +482,14 @@ ignore: name match *.swp
                 if encrypted_file is None:
                     continue
                 self.encrypted_tree.set(pathname, encrypted_file)
-                self.info("Encrypt %s to %s." %
+                self.info("Encrypt %s to %s" %
                           (plain_file.fs_pathname, encrypted_file.fs_pathname))
             elif action == "decrypt":
                 plain_file = self._decrypt_file(pathname)
                 if plain_file is None:
                     continue
                 self.plain_tree.set(pathname, plain_file)
-                self.info("Decrypt %s to %s." %
+                self.info("Decrypt %s to %s" %
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
             elif action == "same":
                 if not encrypted_file.isdir:

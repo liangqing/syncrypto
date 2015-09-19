@@ -115,7 +115,7 @@ class FileEntry(object):
         size = stat.st_size
         isdir = os.path.isdir(path)
         digest = None
-        if not isdir and size <= 1024 * 1024:
+        if not isdir and size <= 10240:
             digest = file_digest(path)
         return cls(pathname, size, stat.st_ctime, stat.st_mtime,
                    mode, isdir=isdir,
