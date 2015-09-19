@@ -108,9 +108,11 @@ class Syncrypto(object):
 ignore: name eq .Trashes
 ignore: name eq .fseventsd
 ignore: name eq Thumb.db
+ignore: name eq node_modules
 ignore: name match .*TemporaryItems
 ignore: name match .*DS_Store
 ignore: name match *.swp
+ignore: name match *.swo
                         """)
 
             if os.path.exists(rule_file):

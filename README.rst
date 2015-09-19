@@ -1,5 +1,5 @@
-Synchronize a folder with its encrypted content
-===============================================
+Two-way synchronization between a folder and its ciphertext
+===========================================================
 
 .. image:: https://img.shields.io/pypi/v/syncrypto.svg
     :target: https://pypi.python.org/pypi/syncrypto/
