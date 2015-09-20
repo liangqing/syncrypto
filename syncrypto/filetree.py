@@ -347,6 +347,8 @@ class FileTree(object):
                 action = rule_set.test(file_entry)
                 if action == "include":
                     self._table[pathname] = file_entry
+                else:
+                    return
         if not isdir:
             return
         for name in os.listdir(path):

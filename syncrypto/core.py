@@ -157,6 +157,10 @@ ignore: name match *.swo
                 fs_pathname = md5[:i]
             else:
                 parent = self.encrypted_tree.get(dirname)
+                if parent is None:
+                    self.error("Can not find file entry for %s" %
+                               dirname)
+                    raise GenerateEncryptedFilePathError()
                 fs_pathname = parent.fs_pathname + '/' + md5[:i]
             if not self.encrypted_tree.has_fs_pathname(fs_pathname):
                 encrypted_file.fs_pathname = fs_pathname

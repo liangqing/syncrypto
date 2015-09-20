@@ -22,9 +22,9 @@ import os
 import os.path
 import shutil
 from tempfile import mkstemp, mkdtemp
-from syncrypto import FileEntry, FileTree
+from syncrypto import FileEntry, FileTree, FileRuleSet
 from time import time
-from util import prepare_filetree
+from util import prepare_filetree, clear_folder
 from syncrypto.util import file_hexlify_digest, file_digest, hexlify, is_windows
 
 
@@ -131,6 +131,21 @@ class FileTreeTestCase(unittest.TestCase):
         self.assertEqual(filetree.get('1/2').isdir, False)
         self.assertEqual(len(filetree.files()), 3)
         self.assertEqual(len(filetree.folders()), 5)
+
+    def test_walk_tree_with_rule(self):
+        clear_folder(self.directory_path)
+        prepare_filetree(self.directory_path, '''
+            ignore/b/c:1
+            ignore/bb:2
+            include/d/e: 3
+            include/dd: 4
+            whatever_file: 5
+        ''')
+        rule_set = FileRuleSet()
+        rule_set.add_rule_by_string("ignore: name eq ignore")
+        filetree = FileTree.from_fs(self.directory_path, rule_set=rule_set)
+        self.assertEqual(len(filetree.files()), 3)
+        self.assertEqual(len(filetree.folders()), 2)
 
 
 if __name__ == '__main__':
