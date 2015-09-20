@@ -141,11 +141,14 @@ class CliTestCase(unittest.TestCase):
         self.cli(["--password-file", self.password_file, self.encrypted_folder,
                   self.plain_folder])
         fd, path = mkstemp()
-        os.write(fd, b"wrong password")
-        os.close(fd)
-        self.assertEqual(syncrypto_cli(["--password-file", path,
-                                        self.encrypted_folder,
-                                        self.plain_folder]), 3)
+        try:
+            os.write(fd, b"wrong password")
+            os.close(fd)
+            self.assertEqual(syncrypto_cli(["--password-file", path,
+                                            self.encrypted_folder,
+                                            self.plain_folder]), 3)
+        finally:
+            os.remove(path)
 
     def test_interactive_input_password(self):
         if is_windows:
@@ -599,19 +602,24 @@ class CliTestCase(unittest.TestCase):
         plain_folder = mkdtemp("中文")
         plain_folder_check = mkdtemp("中文")
         encrypted_folder = mkdtemp("中文")
-        prepare_filetree(plain_folder, '''
-            文件: 你好
-        ''')
-        self.cli(["--password-file", self.password_file,
-                  encrypted_folder,
-                  plain_folder])
-        self.cli(["--password-file", self.password_file,
-                  encrypted_folder,
-                  plain_folder_check])
-        cmp_result = self.tree_cmp(plain_folder, plain_folder_check)
-        self.assertEqual(cmp_result.left_only, [])
-        self.assertEqual(cmp_result.right_only, [])
-        self.assertEqual(cmp_result.diff_files, [])
+        try:
+            prepare_filetree(plain_folder, '''
+                文件: 你好
+            ''')
+            self.cli(["--password-file", self.password_file,
+                      encrypted_folder,
+                      plain_folder])
+            self.cli(["--password-file", self.password_file,
+                      encrypted_folder,
+                      plain_folder_check])
+            cmp_result = self.tree_cmp(plain_folder, plain_folder_check)
+            self.assertEqual(cmp_result.left_only, [])
+            self.assertEqual(cmp_result.right_only, [])
+            self.assertEqual(cmp_result.diff_files, [])
+        finally:
+            shutil.rmtree(plain_folder)
+            shutil.rmtree(plain_folder_check)
+            shutil.rmtree(encrypted_folder)
 
 
 if __name__ == '__main__':
