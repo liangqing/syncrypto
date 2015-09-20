@@ -28,7 +28,7 @@ from syncrypto import cli as syncrypto_cli_raw
 from time import time
 from subprocess import Popen, PIPE
 from util import clear_folder, prepare_filetree, tree_cmp
-from syncrypto.util import is_windows, command_encoded
+from syncrypto.util import is_windows, command_encoded, py2_6
 
 try:
     from cStringIO import StringIO as BytesIO
