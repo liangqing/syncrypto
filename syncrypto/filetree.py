@@ -365,7 +365,7 @@ class FileTree(object):
         s = ""
         for key in table:
             item = table[key]
-            s += "\t" + unicode_text(item)+"\n"
+            s += unicode_text(item)+"\n"
         return s
 
     def to_dict(self):

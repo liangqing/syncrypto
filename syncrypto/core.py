@@ -642,7 +642,7 @@ def main(args=sys.argv[1:]):
 
     if args.password_file is not None and os.path.exists(args.password_file):
         with open(args.password_file) as f:
-            password = f.read()
+            password = f.read().strip("\n")
 
     rule_set = FileRuleSet()
 
@@ -652,6 +652,8 @@ def main(args=sys.argv[1:]):
 
     if password is None:
         password = getpass(b'Please input the password:')
+
+    print("|", password,"|", end="")
 
     crypto = Crypto(password)
 
