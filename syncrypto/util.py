@@ -45,6 +45,9 @@ if py3:
     def command_text(s):
         return unicode_text(s, fs_encoding)
 
+    def command_encoded(s):
+        return s
+
 else:
 
     def unicode_text(s, encoding="utf-8"):
@@ -62,6 +65,9 @@ else:
 
     def command_text(s):
         return unicode_text(s, fs_encoding)
+
+    def command_encoded(s):
+        return s.encode(fs_encoding)
 
 
 def file_digest(path, buffer_size=10240):

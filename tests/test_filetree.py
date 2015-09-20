@@ -25,7 +25,7 @@ from tempfile import mkstemp, mkdtemp
 from syncrypto import FileEntry, FileTree
 from time import time
 from util import prepare_filetree
-from syncrypto.util import file_hexlify_digest, file_digest, hexlify
+from syncrypto.util import file_hexlify_digest, file_digest, hexlify, is_windows
 
 
 try:
@@ -82,6 +82,8 @@ class FileEntryTestCase(unittest.TestCase):
             'isdir': False,
             'salt': None
         }
+        if is_windows:
+            d['mode'] = None
         file_object = FileEntry.from_file(self.file_path, d['pathname'])
         self.assertEqual(d, file_object.to_dict())
 

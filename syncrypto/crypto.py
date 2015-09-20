@@ -65,12 +65,9 @@ class Crypto(object):
         encrypted_fd.close()
 
     def decrypt_file(self, encrypted_path, plain_path):
-        plain_fd = open(plain_path, 'wb')
-        encrypted_fd = open(encrypted_path, 'rb')
-        file_entry = self.decrypt_fd(encrypted_fd, plain_fd)
-        plain_fd.close()
-        encrypted_fd.close()
-        return file_entry
+        with open(plain_path, 'wb') as plain_fd:
+            with open(encrypted_path, 'rb') as encrypted_fd:
+                return self.decrypt_fd(encrypted_fd, plain_fd)
 
     @staticmethod
     def compress_fd(in_fd, out_fd):
@@ -106,11 +103,13 @@ class Crypto(object):
         return file_entry.digest + \
                pack(b'!Q', file_entry.size) + \
                pack(b'!I', int(file_entry.mtime)) + \
-               pack(b'!i', file_entry.mode)
+               pack(b'!i', file_entry.mode or 0)
 
     @staticmethod
     def _unpack_footer(pathname, footer):
         (size, mtime, mode) = unpack(b'!QIi', footer[16:32])
+        if mode == 0:
+            mode = None
         return FileEntry(pathname, size, None, mtime, mode,
                          footer[:16], False)
 
