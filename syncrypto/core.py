@@ -186,9 +186,9 @@ ignore: name match *.swo
         if plain_file.isdir:
             if not os.path.exists(encrypted_path):
                 os.makedirs(encrypted_path)
-            if plain_file.mode is not None:
-                os.chmod(encrypted_path, plain_file.mode | S_IWUSR | S_IRUSR)
-            os.utime(encrypted_path, (mtime, mtime))
+            # if plain_file.mode is not None:
+            #     os.chmod(encrypted_path, plain_file.mode | S_IWUSR | S_IRUSR)
+            # os.utime(encrypted_path, (mtime, mtime))
             encrypted_file.copy_attr_from(plain_file)
             return encrypted_file
         if os.path.exists(encrypted_path):
@@ -271,11 +271,13 @@ ignore: name match *.swo
     def _is_changed(file_entry, snapshot_file):
         if file_entry is None or snapshot_file is None:
             return True
+        if file_entry.isdir and snapshot_file.isdir:
+            return False
         if file_entry.digest is not None and snapshot_file.digest is not None:
             return file_entry.digest != snapshot_file.digest
         return \
             file_entry.size != snapshot_file.size or \
-            abs(file_entry.mtime - snapshot_file.mtime) > 1
+            int(file_entry.mtime) > int(snapshot_file.mtime)
 
     def _compare_file(self, encrypted_file, plain_file, snapshot_file):
         if self._is_ignore(plain_file, encrypted_file):
@@ -491,15 +493,19 @@ ignore: name match *.swo
                 if encrypted_file is None:
                     continue
                 self.encrypted_tree.set(pathname, encrypted_file)
-                self.info("Encrypt %s to %s" %
-                          (plain_file.fs_pathname, encrypted_file.fs_pathname))
+                if not encrypted_file.isdir:
+                    self.info("Encrypt %s to %s" %
+                              (plain_file.fs_pathname,
+                               encrypted_file.fs_pathname))
             elif action == "decrypt":
                 plain_file = self._decrypt_file(pathname)
                 if plain_file is None:
                     continue
                 self.plain_tree.set(pathname, plain_file)
-                self.info("Decrypt %s to %s" %
-                          (encrypted_file.fs_pathname, plain_file.fs_pathname))
+                if not plain_file.isdir:
+                    self.info("Decrypt %s to %s" %
+                              (encrypted_file.fs_pathname,
+                               plain_file.fs_pathname))
             elif action == "same":
                 if not encrypted_file.isdir:
                     self.debug("%s is not changed " % plain_file.fs_pathname)
