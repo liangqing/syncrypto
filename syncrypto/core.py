@@ -648,7 +648,7 @@ def main(args=sys.argv[1:]):
             rule_set.add_rule_by_string(rule_string)
 
     if password is None:
-        password = getpass('Please input the password:')
+        password = getpass(b'Please input the password:')
 
     crypto = Crypto(password)
 
@@ -673,8 +673,8 @@ def main(args=sys.argv[1:]):
         if args.change_password:
             newpass1 = None
             while True:
-                newpass1 = getpass('Please input the new password:')
-                newpass2 = getpass('Please re input the new password:')
+                newpass1 = getpass(b'Please input the new password:')
+                newpass2 = getpass(b'Please re input the new password:')
                 if len(newpass1) < 6:
                     print("new password is too short")
                 elif newpass1 != newpass2:
