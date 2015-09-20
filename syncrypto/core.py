@@ -653,8 +653,6 @@ def main(args=sys.argv[1:]):
     if password is None:
         password = getpass(b'Please input the password:')
 
-    print("|", password,"|", end="")
-
     crypto = Crypto(password)
 
     try:
