@@ -499,7 +499,7 @@ ignore: name match *.swo
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
             elif action == "same":
                 if not encrypted_file.isdir:
-                    self.info("%s is not changed " % plain_file.fs_pathname)
+                    self.debug("%s is not changed " % plain_file.fs_pathname)
             elif action == 'conflict':
                 if plain_file.isdir and encrypted_file.isdir:
                     continue
@@ -512,8 +512,11 @@ ignore: name match *.swo
                 self.info("Has conflict between %s and %s!" %
                           (encrypted_file.fs_pathname, plain_file.fs_pathname))
             elif action == 'ignore':
-                if encrypt_file is not None:
+                if encrypted_file is not None:
                     encrypted_remove_list.append(pathname)
+                if plain_file is not None and plain_file.isdir \
+                        or encrypted_file is not None and encrypted_file.isdir:
+                    plain_ignore_prefix = pathname
 
         for pathname in encrypted_remove_list:
             self._delete_file(pathname, True)
@@ -585,9 +588,9 @@ def _generate_tmp_path(folder=None):
             return path
 
 
-def decrypt_file(crypto, encrypted_path, plain_path=None):
+def cli_decrypt_file(crypto, encrypted_path, plain_path=None):
     if not os.path.isfile(encrypted_path):
-        print(encrypted_path+" is not a file")
+        print(printable_text(encrypted_path+" is not a file"))
         return 1
     if plain_path is not None:
         file_entry = crypto.decrypt_file(encrypted_path, plain_path)
@@ -602,9 +605,9 @@ def decrypt_file(crypto, encrypted_path, plain_path=None):
     return 0
 
 
-def encrypt_file(crypto, plain_path, encrypted_path=None):
+def cli_encrypt_file(crypto, plain_path, encrypted_path=None):
     if not os.path.isfile(plain_path):
-        print(plain_path+" is not a file")
+        print(printable_text(plain_path+" is not a file"))
         return 1
     filename = os.path.basename(plain_path)
     pos = filename.rfind('.')
@@ -655,10 +658,10 @@ def main(args=sys.argv[1:]):
     try:
 
         if args.decrypt_file is not None:
-            return decrypt_file(crypto, args.decrypt_file, args.out_file)
+            return cli_decrypt_file(crypto, args.decrypt_file, args.out_file)
 
         if args.encrypt_file is not None:
-            return encrypt_file(crypto, args.encrypt_file, args.out_file)
+            return cli_encrypt_file(crypto, args.encrypt_file, args.out_file)
 
         if args.encrypted_folder is None:
             parser.print_help()
@@ -683,7 +686,7 @@ def main(args=sys.argv[1:]):
                     break
             syncrypto.change_password(newpass1)
         elif args.print_encrypted_tree:
-            print(syncrypto.encrypted_tree)
+            print(printable_text(syncrypto.encrypted_tree))
         elif args.plaintext_folder is not None:
             if args.interval:
                 while True:

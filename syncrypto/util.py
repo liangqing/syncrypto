@@ -53,14 +53,17 @@ else:
     def unicode_text(s, encoding="utf-8"):
         if isinstance(s, unicode):
             return s
-        elif not isinstance(s, str) or not isinstance(s, bytes):
-            s = str(s)
+        if not isinstance(s, str) or not isinstance(s, bytes):
+            s = s.__str__()
+        if isinstance(s, unicode):
+            return s
         return unicode(s, encoding=encoding)
 
     def printable_text(s, encoding="utf-8"):
-        if isinstance(s, unicode):
-            return s.encode(encoding)
-        return str(s)
+        if isinstance(s, str):
+            return s
+        s = unicode_text(s)
+        return s.encode(encoding)
 
 
     def command_text(s):
