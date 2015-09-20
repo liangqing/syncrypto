@@ -177,7 +177,10 @@ ignore: name match *.swo
             return encrypted_file
         if encrypted_file is None:
             encrypted_file = plain_file.clone()
-            self._generate_encrypted_path(encrypted_file)
+            try:
+                self._generate_encrypted_path(encrypted_file)
+            except GenerateEncryptedFilePathError:
+                return None
         encrypted_path = encrypted_file.fs_path(self.encrypted_folder)
         mtime = plain_file.mtime
         if plain_file.isdir:
