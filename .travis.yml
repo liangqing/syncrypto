@@ -11,12 +11,3 @@ install:
 script: nosetests  --rednose --with-cov
 after_success:
 - codecov
-deploy:
-  provider: pypi
-  user: liangqing
-  password:
-    secure: lV7ORgZHLa6qWy3/7bbMGPZPWTpDuQZVkzUN9dtuJFTEVlSafWyufOhb+dQO+9pAGUtw7g1lEuQHPCM65vdKL+LICWrFa7AfNr2XgjgYuAy8WvFaq0sp/Ph/Tk+aiY9PBBpobKGNHWWtVtyp00LnxTf9uJRk9aR9PugiCuv6QMdmtjhsORS9TvdhR2EB2boTX4WVbz6wByzH3txON00Z27/evJ60d5uC9cj0gQ0rumB2HDQZmMlyGLHlBXw6pHAJqlMs7bTZtgk07yF1ZX0N1wumag2SGDNB/LCg58hDE2X7lNeWjHcxwRo8cq15H5u7ryUp+nZMOdQM7cn+Fdw5ZeHFa83QCYa92Ye/9+vHL+8shKU9aSGj7IlavUM+easWdAM54WjWBDzWjutCVI7iDeYnzYR537RZXMrKCE+VImzJgn7TcwWDJEfGkXAkdn+9HIJxrWJHn1Or6wwguS52r1x1jyHutOQ9DsSJMcOnrHr/xyrnU7kI6D3X987+jrdA7wYdVe6gwWKIlYUk0CnL53ynxDcHH0/Wg8moVzINatY7S7OlWzIuX3N0LCl2TrCu7ir6Kri7XC4ACZz+QQTKCZ1DLhCHAvpP1TGuOJdFTyvukAi3VyzgE+CrvBetNZhnMfHv3qnifL5/GNx/4Ilc4KXh7Cd30fuYEjjcij+DdL4=
-  distributions: "bdist_wheel"
-  on:
-    tags: true
-    repo: liangqing/syncrypto
