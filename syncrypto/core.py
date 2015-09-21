@@ -23,7 +23,6 @@ import os
 import sys
 import os.path
 import shutil
-import hashlib
 import json
 from datetime import datetime
 from time import sleep, time
@@ -33,7 +32,7 @@ from random import randint
 from stat import S_IWUSR, S_IRUSR
 from .crypto import Crypto, DecryptError
 from .filetree import FileTree, FileRuleSet, FileEntry
-from .util import printable_text
+from .util import printable_text, string_digest
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -70,6 +69,7 @@ class Syncrypto(object):
         self._encrypted_folder_is_new = False
         self._trash_name = self._generate_trash_name()
         self._snapshot_trash_name = None
+        self._snapshot_tree_name = string_digest(self.encrypted_folder)
 
         if not os.path.isdir(self.encrypted_folder):
             if os.path.exists(self.encrypted_folder):
@@ -81,6 +81,9 @@ class Syncrypto(object):
         if os.path.exists(os.path.join(self.encrypted_folder, ".syncrypto")):
             raise InvalidFolder("Encrypted folder can not has .syncrypto folder"
                                 " within it, do you pass the wrong arguments?")
+
+        if self.encrypted_tree is None:
+            self._load_encrypted_tree()
 
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
@@ -109,11 +112,13 @@ ignore: name eq .Trashes
 ignore: name eq .fseventsd
 ignore: name eq Thumb.db
 ignore: name eq node_modules
+ignore: name match *.pyc
+ignore: name match *.class
 ignore: name match .*TemporaryItems
 ignore: name match .*DS_Store
 ignore: name match *.swp
 ignore: name match *.swo
-                        """)
+                        """.strip())
 
             if os.path.exists(rule_file):
                 with open(rule_file, 'rb') as f:
@@ -128,9 +133,6 @@ ignore: name match *.swo
 
             if self.plain_tree is None:
                 self._load_plain_tree()
-
-        if self.encrypted_tree is None:
-            self._load_encrypted_tree()
 
     def debug(self, message):
         if self._debug:
@@ -150,18 +152,18 @@ ignore: name match *.swo
 
     def _generate_encrypted_path(self, encrypted_file):
         dirname, name = encrypted_file.split()
-        md5 = hashlib.md5(name.encode("utf-8")).hexdigest()
+        digest = string_digest(name)
         i = 2
         while True:
             if dirname == '':
-                fs_pathname = md5[:i]
+                fs_pathname = digest[:i]
             else:
                 parent = self.encrypted_tree.get(dirname)
                 if parent is None:
                     self.error("Can not find file entry for %s" %
                                dirname)
                     raise GenerateEncryptedFilePathError()
-                fs_pathname = parent.fs_pathname + '/' + md5[:i]
+                fs_pathname = parent.fs_pathname + '/' + digest[:i]
             if not self.encrypted_tree.has_fs_pathname(fs_pathname):
                 encrypted_file.fs_pathname = fs_pathname
                 return
@@ -268,24 +270,28 @@ ignore: name match *.swo
                 self.rule_set.test(encrypted_file) != 'include')
 
     @staticmethod
-    def _is_changed(file_entry, snapshot_file):
-        if file_entry is None or snapshot_file is None:
-            return True
-        if file_entry.isdir and snapshot_file.isdir:
+    def _is_equal(file_entry, file_entry_compare):
+        if file_entry is None or file_entry_compare is None:
             return False
-        if file_entry.digest is not None and snapshot_file.digest is not None:
-            return file_entry.digest != snapshot_file.digest
+        if file_entry.isdir and file_entry_compare.isdir:
+            return True
+        if file_entry.digest is not None \
+                and file_entry_compare.digest is not None:
+            return file_entry.digest == file_entry_compare.digest
         return \
-            file_entry.size != snapshot_file.size or \
-            int(file_entry.mtime) > int(snapshot_file.mtime)
+            file_entry.size == file_entry_compare.size and \
+            int(file_entry.mtime) == int(file_entry_compare.mtime)
 
     def _compare_file(self, encrypted_file, plain_file, snapshot_file):
         if self._is_ignore(plain_file, encrypted_file):
             return "ignore"
         if self._encrypted_folder_is_new:
             return "encrypt"
-        plain_file_changed = self._is_changed(plain_file, snapshot_file)
-        encrypted_file_changed = self._is_changed(encrypted_file, snapshot_file)
+        if self._is_equal(plain_file, encrypted_file):
+            return 'same'
+        plain_file_changed = not self._is_equal(plain_file, snapshot_file)
+        encrypted_file_changed = not self._is_equal(encrypted_file,
+                                                    snapshot_file)
         if plain_file is not None and encrypted_file is not None:
             if plain_file_changed and not encrypted_file_changed:
                 return "encrypt"
@@ -348,8 +354,7 @@ ignore: name match *.swo
         return self._plain_folder_path("rules")
 
     def _snapshot_tree_path(self):
-        md5 = hashlib.md5(self.encrypted_folder.encode("utf-8")).hexdigest()
-        return self._plain_folder_path(md5+'.filetree')
+        return self._plain_folder_path(self._snapshot_tree_name+'.filetree')
 
     def _plain_folder_path(self, sub_file):
         filename = ".syncrypto"
@@ -363,9 +368,10 @@ ignore: name match *.swo
 
     def _save_encrypted_tree(self):
         fp = open(self._encrypted_tree_path(), "wb")
-        self.crypto.encrypt_fd(
-            BytesIO(json.dumps(self.encrypted_tree.to_dict()).encode("utf-8")),
-            fp, None, Crypto.COMPRESS)
+        tree_dict = self.encrypted_tree.to_dict()
+        tree_dict["snapshot_tree_name"] = self._snapshot_tree_name
+        self.crypto.encrypt_fd(BytesIO(json.dumps(tree_dict).encode("utf-8")),
+                               fp, None, Crypto.COMPRESS)
         fp.close()
 
     def _load_encrypted_tree(self):
@@ -373,14 +379,22 @@ ignore: name match *.swo
         if not os.path.exists(encrypted_tree_path):
             self.encrypted_tree = FileTree()
             self._encrypted_folder_is_new = True
+            snapshot_tree_path = \
+                os.path.join(self.plain_folder, ".syncrypto",
+                             self._snapshot_tree_name+".filetree")
+            if not os.path.exists(snapshot_tree_path):
+                self._snapshot_tree_name = string_digest(
+                    os.path.abspath(self.encrypted_folder)+str(time()))
         else:
             fp = open(encrypted_tree_path, "rb")
             try:
                 tree_fd = BytesIO()
                 self.crypto.decrypt_fd(fp, tree_fd)
                 tree_fd.seek(0)
-                self.encrypted_tree = FileTree.from_dict(
-                    json.loads(tree_fd.getvalue().decode("utf-8")))
+                tree_dict = json.loads(tree_fd.getvalue().decode("utf-8"))
+                if "snapshot_tree_name" in tree_dict:
+                    self._snapshot_tree_name = tree_dict["snapshot_tree_name"]
+                self.encrypted_tree = FileTree.from_dict(tree_dict)
             finally:
                 fp.close()
 
@@ -437,14 +451,14 @@ ignore: name match *.swo
                 self._move_to_encrypted_trash(file_entry)
             else:
                 self._move_to_plain_trash(file_entry)
-            self.info("Delete folder %s in %s" % (file_entry.fs_pathname,
+            self.info("Delete folder %s in %s" % (file_entry.pathname,
                                                   target))
         elif os.path.exists(fs_path):
             if is_in_encrypted_folder:
                 self._move_to_encrypted_trash(file_entry)
             else:
                 self._move_to_plain_trash(file_entry)
-            self.info("Delete file %s in %s" % (file_entry.fs_pathname,
+            self.info("Delete file %s in %s" % (file_entry.pathname,
                                                 target))
         tree.remove(pathname)
 
@@ -518,8 +532,7 @@ ignore: name match *.swo
                     plain_ignore_prefix = pathname
                 plain_file = self._decrypt_file(pathname)
                 self.plain_tree.set(pathname, plain_file)
-                self.info("Has conflict between %s and %s!" %
-                          (encrypted_file.fs_pathname, plain_file.fs_pathname))
+                self.info("%s has conflict!" % plain_file.fs_pathname)
             elif action == 'ignore':
                 if encrypted_file is not None:
                     encrypted_remove_list.append(pathname)

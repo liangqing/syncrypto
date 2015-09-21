@@ -84,6 +84,12 @@ def file_digest(path, buffer_size=10240):
     return md5_obj.digest()
 
 
+def string_digest(string, encoding="utf-8"):
+    md5_obj = hashlib.md5()
+    md5_obj.update(string.encode(encoding))
+    return hexlify(md5_obj.digest())
+
+
 def hexlify(data):
     return unicode_text(binascii.hexlify(data))
 

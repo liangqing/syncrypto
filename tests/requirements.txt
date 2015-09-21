@@ -6,3 +6,4 @@ unittest2
 cryptography
 lockfile
 pexpect
+codecov
