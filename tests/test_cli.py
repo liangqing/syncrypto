@@ -162,6 +162,34 @@ class CliTestCase(unittest.TestCase):
         child.close()
         self.assertEqual(child.exitstatus, 0)
 
+    def test_interactive_change_password(self):
+        if is_windows:
+            return
+        self.cli(["--password-file", self.password_file, self.encrypted_folder,
+                  self.plain_folder])
+        child = self.pexpect(["--change-password", self.encrypted_folder])
+        child.expect("password:")
+        child.sendline("password test")
+        child.expect("password:")
+        child.sendline("password new")
+        child.expect("password:")
+        child.sendline("password new")
+        child.expect(pexpect.EOF)
+        child.close()
+        self.assertEqual(child.exitstatus, 0)
+        child = self.pexpect([self.encrypted_folder, self.plain_folder])
+        child.expect("password:")
+        child.sendline("password new")
+        child.expect(pexpect.EOF)
+        child.close()
+        self.assertEqual(child.exitstatus, 0)
+        child = self.pexpect([self.encrypted_folder, self.plain_folder])
+        child.expect("password:")
+        child.sendline("password wrong")
+        child.expect(pexpect.EOF)
+        child.close()
+        self.assertEqual(child.exitstatus, 3)
+
     def test_interactive_invalid_password(self):
         if is_windows:
             return
@@ -413,8 +441,12 @@ class CliTestCase(unittest.TestCase):
             f.write(b'exclude: name match *_encrypted')
         self.cli(["--password-file", self.password_file,
                   self.encrypted_folder, self.plain_folder])
+        self.assertTrue(os.path.exists(
+            os.path.join(self.encrypted_folder, "_syncrypto", "rules")))
         self.cli(["--password-file", self.password_file,
                   self.encrypted_folder, self.plain_folder_check])
+        self.assertTrue(file_cmp(os.path.join(dot_folder, "rules"),
+                                 os.path.join(dot_folder_check, "rules")))
         cmp_result = self.tree_cmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(sorted(cmp_result.left_only),
                          ["filename_not_sync", "filename_not_sync_encrypted"])

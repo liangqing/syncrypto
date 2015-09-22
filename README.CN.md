@@ -51,34 +51,38 @@ syncrypto - 文件夹加密双向同步
 由于依赖[cryptography](https://github.com/pyca/cryptography)，在*Linux*上需要先安装一些依赖: 
 
 在Debian/Ubuntu系列中运行
-```bash
+```shell
 sudo apt-get install build-essential libssl-dev libffi-dev python-dev
 ```
 或者，在Fedora/RHEL系列中运行
-```bash
+```shell
 sudo yum install gcc libffi-devel python-devel openssl-devel
 ```
 
 如果是OS X系统，需要运行
-```bash
+```shell
 xcode-select --install
 ```
 
-### 安装
+### 安装与更新
 
 安装完所有依赖后，即可通过[pip](https://pip.pypa.io/en/latest/installing.html)
 安装``syncrypto``:
 
-```bash
+```shell
 pip install syncrypto
 ```
 
+或者通过下面的命令更新
+```shell
+pip install -U syncrypto
+```
 
 ## 使用
 
 ### 同步
 
-```bash
+```shell
 syncrypto [加密文件夹] [明文文件夹] # 注意，加密文件夹放在前面
 ```
 可以使用这个命令来同步，运行后会提示输入密码，第一次在该加密目录下运行的话是设置密码，之后
@@ -86,7 +90,7 @@ syncrypto [加密文件夹] [明文文件夹] # 注意，加密文件夹放在�
 
 如果不想通过命令行交互的方式输入密码，可以通过--password-file选项来通过文件给出密码：
 
-```bash
+```shell
 syncrypto [加密文件夹] [明文文件夹] --password-file [密码文件]
 ```
 密码文件里面保存的是明文密码
@@ -96,14 +100,14 @@ syncrypto [加密文件夹] [明文文件夹] --password-file [密码文件]
 有时候，有些文件（例如一些临时文件）没有必要进行加密同步，这个时候你可以通过rule来排除
 这些文件:
 
-```bash
+```shell
 syncrypto [加密文件夹] [明文文件夹] --rule 'ignore: name match *.swp'
 ```
 上面这条命令会在同步过程中忽略那些文件名匹配"*.swp"的文件
 
 可以添加多条rule：
 
-```bash
+```shell
 syncrypto [加密文件夹] [明文文件夹] --rule 'include: name eq README.md' --rule 'ignore: name match *.md'
 ```
 
@@ -113,7 +117,7 @@ syncrypto [加密文件夹] [明文文件夹] --rule 'include: name eq README.md
 
 也可以通过文件，而不是命令行的方式配置rule，--rule-file选项可以做到：
 
-```bash
+```shell
 syncrypto [加密文件夹] [明文文件夹] --rule-file [rule文件]
 ```
 
@@ -167,14 +171,14 @@ rule的格式：
 
 如果只想加密一个文件，可以使用：
 
-```bash
+```shell
 syncrypto --encrypt-file [文件路径]
 ```
 
 这条命令默认会将加密后的文件放在明文文件相同目录下，如果想放到别的地方，可以加上--out-file
 参数:
 
-```bash
+```shell
 syncrypto --encrypt-file [明文文件路径] --out-file [加密后文件路径]
 ```
 
@@ -182,14 +186,14 @@ syncrypto --encrypt-file [明文文件路径] --out-file [加密后文件路径]
 
 如果想解密任何一个通过``syncrypto``加密过的文件，可以使用：
 
-```bash
+```shell
 syncrypto --decrypt-file [文件路径]
 ```
 
 这条命令默认会将解密后的文件放在**当前目录下**，如果想放到别的地方，同样可以加上--out-file
 参数:
 
-```bash
+```shell
 syncrypto --decrypt-file [密文文件] --out-file [解密后文件]
 ```
 
@@ -197,7 +201,7 @@ syncrypto --decrypt-file [密文文件] --out-file [解密后文件]
 
 修改一个已经加密同步过后的密文目录中的密码
 
-```bash
+```shell
 syncrypto --change-password [密文目录]
 ```
 这条命令首先会提示输入当前密码，之后会提示设置新密码，设置成功后会将密文目录下的所有文件
@@ -206,7 +210,7 @@ syncrypto --change-password [密文目录]
 
 ### 帮助
 
-```bash
+```shell
 syncrypto -h
 ```
 

@@ -58,15 +58,13 @@ class Crypto(object):
         self.block_size = 16
 
     def encrypt_file(self, plain_path, encrypted_path, plain_file_entry):
-        plain_fd = open(plain_path, 'rb')
-        encrypted_fd = open(encrypted_path, 'wb')
-        self.encrypt_fd(plain_fd, encrypted_fd, plain_file_entry)
-        plain_fd.close()
-        encrypted_fd.close()
+        with open(plain_path, 'rb') as plain_fd:
+            with open(encrypted_path, 'wb') as encrypted_fd:
+                self.encrypt_fd(plain_fd, encrypted_fd, plain_file_entry)
 
     def decrypt_file(self, encrypted_path, plain_path):
-        with open(plain_path, 'wb') as plain_fd:
-            with open(encrypted_path, 'rb') as encrypted_fd:
+        with open(encrypted_path, 'rb') as encrypted_fd:
+            with open(plain_path, 'wb') as plain_fd:
                 return self.decrypt_fd(encrypted_fd, plain_fd)
 
     @staticmethod

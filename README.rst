@@ -86,7 +86,7 @@ dependencies before install ``syncrypto``\:
 For Debian and Ubuntu, the following command will ensure that the required
 dependencies are installed\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     sudo apt-get install build-essential libssl-dev libffi-dev python-dev
 
@@ -94,28 +94,33 @@ dependencies are installed\:
 For Fedora and RHEL-derivatives, the following command will ensure that the
 required dependencies are installed\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     sudo yum install gcc libffi-devel python-devel openssl-devel
 
 For OS X, run\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     xcode-select --install
 
 
-Install By pip
---------------
+Install or Update By pip
+------------------------
 
 After installing all dependencies, you can install ``syncrypto`` by pip_ \:
 
 .. _pip: https://pip.pypa.io/en/latest/installing.html
 
-.. code-block:: bash
+.. code-block:: shell
 
     pip install syncrypto
 
+or update by\:
+
+.. code-block:: shell
+
+    pip install -U syncrypto
 
 Usage
 =====
@@ -123,7 +128,7 @@ Usage
 Synchronization
 ---------------
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto [encrypted folder] [plaintext folder]
 
@@ -135,7 +140,7 @@ plaintext password)
 If you don't want input password in interactive mode, you can use --password-file
 option\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto [encrypted folder] [plaintext folder] --password-file [password file path]
 
@@ -152,7 +157,7 @@ Sometimes, it is unnecessary to encrypt and sync some files
 (for example, some temporary files),
 if you want ignore these files, you can add rule\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto [encrypted folder] [plaintext folder] --rule 'ignore: name match *.swp'
 
@@ -160,7 +165,7 @@ the command above ignores files which name matches \*.swp
 
 You can add rules multiple times\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto [encrypted folder] [plaintext folder] --rule 'include: name eq README.md' --rule 'ignore: name match *.md'
 
@@ -180,7 +185,7 @@ You can add rules in a file looks like\:
 
 and use the rules by "--rule-file" option\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto [encrypted folder] [plaintext folder] --rule-file [rule file path]
 
@@ -233,7 +238,7 @@ The format of value in ``ctime``, ``mtime`` is "%Y-%m-%d %H:%M:%S"
 Encrypt a file
 --------------
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto --encrypt-file [plaintext file path]
 
@@ -242,14 +247,14 @@ add a "encrypted" word
 
 You can also specify the target encrypted file by --out-file option, such as\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto --encrypt-file [plaintext file path] --out-file [encrypted file path]
 
 Decrypt a file
 --------------
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto --decrypt-file [encrypted file path]
 
@@ -257,7 +262,7 @@ This command will decrypt the encrypted file to **current working directory**
 
 You can also specify the target plaintext file by --out-file option, such as\:
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto --decrypt-file [encrypted file path] --out-file [plaintext file path]
 
@@ -265,7 +270,7 @@ You can also specify the target plaintext file by --out-file option, such as\:
 Change the password
 -------------------
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto --change-password [encrypted folder]
 
@@ -276,7 +281,7 @@ the encrypted folder
 Show the help
 -------------
 
-.. code-block:: bash
+.. code-block:: shell
 
     syncrypto -h
 
