@@ -555,7 +555,7 @@ class Syncrypto(object):
                     encrypted_remove_list.append(pathname)
                 if plain_file is not None and plain_file.isdir \
                         or encrypted_file is not None and encrypted_file.isdir:
-                    plain_ignore_prefix = pathname
+                    plain_ignore_prefix = pathname+'/'
 
         for pathname in encrypted_remove_list:
             self._delete_file(pathname, True)

@@ -213,6 +213,12 @@ class FileRuleSetTestCase(unittest.TestCase):
         self.assertEqual(f.op, "match")
         self.assertEqual(f.value, "*_not_sync")
 
+    def test_eq(self):
+        tmp = self.file_entry.pathname
+        f = FileRuleSet.parse("exclude: name eq .git")
+        self.file_entry.pathname = ".gitignore"
+        self.assertEqual(f.test(self.file_entry), None)
+        self.file_entry.pathname = tmp
 
 if __name__ == '__main__':
     unittest.main()
