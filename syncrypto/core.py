@@ -95,9 +95,6 @@ class Syncrypto(object):
             raise InvalidFolder("Encrypted folder can not has .syncrypto folder"
                                 " within it, do you pass the wrong arguments?")
 
-        if self.encrypted_tree is None:
-            self._load_encrypted_tree()
-
         if plain_folder is not None:
             if not os.path.isdir(self.plain_folder):
                 if os.path.exists(self.plain_folder):
@@ -576,7 +573,7 @@ class Syncrypto(object):
         ))
         self._trash_name = self._generate_trash_name()
 
-    def sync_folder(self):
+    def sync_folder(self, reload_tree=True):
         encrypted_folder_lock = LockFile(self.encrypted_folder)
         if encrypted_folder_lock.is_locked():
             self.info("Acquiring the lock of encrypted folder...")
@@ -591,9 +588,15 @@ class Syncrypto(object):
                 self.debug("Plaintext folder is not locked")
             with plain_folder_lock:
                 self.debug("Acquired the plaintext folder's lock")
+                if reload_tree:
+                    self._load_encrypted_tree()
+                    self._load_plain_tree()
+                    self._load_snapshot_tree()
                 self._do_sync_folder()
 
     def change_password(self, newpass):
+        if self.encrypted_tree is None:
+            self._load_encrypted_tree()
         newpass = newpass.encode('utf-8')
         oldpass = self.crypto.password
         if oldpass == newpass:

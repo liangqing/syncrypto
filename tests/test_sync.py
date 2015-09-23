@@ -65,8 +65,8 @@ class SyncTestCase(unittest.TestCase):
         sync2 = Syncrypto(self.crypto, self.encrypted_folder,
                           self.plain_folder_check,
                           self.encrypted_tree, self.plain_tree_check)
-        sync.sync_folder()
-        sync2.sync_folder()
+        sync.sync_folder(False)
+        sync2.sync_folder(False)
         directory_cmp = dircmp(self.plain_folder, self.plain_folder_check)
         self.assertEqual(len(directory_cmp.left_only), 0)
         self.assertEqual(len(directory_cmp.right_only), 0)
@@ -161,14 +161,14 @@ class SyncTestCase(unittest.TestCase):
         sync = Syncrypto(self.crypto, self.encrypted_folder, self.plain_folder,
                          self.encrypted_tree, self.plain_tree,
                          self.snapshot_tree)
-        sync.sync_folder()
+        sync.sync_folder(False)
         oldpass = self.crypto.password
         newpass = "new password"
         sync.change_password(newpass)
         self.crypto.password = oldpass
         self.assertRaises(DecryptError, sync._load_encrypted_tree)
         self.crypto.password = newpass.encode("ascii")
-        sync.sync_folder()
+        sync.sync_folder(False)
 
 
 if __name__ == '__main__':
