@@ -127,12 +127,6 @@ class Syncrypto(object):
                             continue
                         self.rule_set.add_rule_by_string(line.decode("ascii"))
 
-            if self.snapshot_tree is None:
-                self._load_snapshot_tree()
-
-            if self.plain_tree is None:
-                self._load_plain_tree()
-
     def debug(self, message):
         if self._debug:
             print("[DEBUG]", printable_text(message))
@@ -591,6 +585,8 @@ class Syncrypto(object):
                 if reload_tree:
                     self._load_encrypted_tree()
                     self._load_plain_tree()
+                    self._load_snapshot_tree()
+                if self.snapshot_tree is None:
                     self._load_snapshot_tree()
                 self._do_sync_folder()
 
