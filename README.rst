@@ -105,7 +105,7 @@ For OS X, run\:
     xcode-select --install
 
 
-Install or Update By pip
+Install And Update By pip
 ------------------------
 
 After installing all dependencies, you can install ``syncrypto`` by pip_ \:
