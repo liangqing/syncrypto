@@ -56,6 +56,12 @@ DEFAULT_RULES = b"""ignore: name eq .Trashes
 ignore: name eq .fseventsd
 ignore: name eq Thumb.db
 ignore: name eq node_modules
+ignore: name eq .sass-cache
+ignore: name eq .idea
+ignore: name eq .git
+ignore: name eq .svn
+ignore: name eq .hg
+ignore: name eq .cvs
 ignore: name match *.pyc
 ignore: name match *.class
 ignore: name match .*TemporaryItems
