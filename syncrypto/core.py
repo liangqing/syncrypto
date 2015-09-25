@@ -496,11 +496,12 @@ class Syncrypto(object):
             self.plain_tree.set(".syncrypto/rules",
                                 FileEntry.from_file(self._plain_rule_path(),
                                                     ".syncrypto/rules"))
-        plain_ignore_prefix = None
+        ignore_prefix = None
         for pathname in pathnames:
-            if plain_ignore_prefix is not None \
-                    and pathname.startswith(plain_ignore_prefix):
+            if ignore_prefix is not None \
+                    and pathname.startswith(ignore_prefix):
                 self.plain_tree.remove(pathname)
+                self.encrypted_tree.remove(pathname)
             encrypted_file = self.encrypted_tree.get(pathname)
             plain_file = self.plain_tree.get(pathname)
             action = self._compare_file(encrypted_file, plain_file,
@@ -537,16 +538,17 @@ class Syncrypto(object):
                 plain_path = plain_file.fs_path(self.plain_folder)
                 shutil.move(plain_path, self._conflict_path(plain_path))
                 if plain_file.isdir:
-                    plain_ignore_prefix = pathname
+                    ignore_prefix = pathname
                 plain_file = self._decrypt_file(pathname)
                 self.plain_tree.set(pathname, plain_file)
                 self.info("%s has conflict!" % plain_file.fs_pathname)
             elif action == 'ignore':
                 if encrypted_file is not None:
                     encrypted_remove_list.append(pathname)
-                if plain_file is not None and plain_file.isdir \
-                        or encrypted_file is not None and encrypted_file.isdir:
-                    plain_ignore_prefix = pathname+'/'
+                if (plain_file is not None and plain_file.isdir) \
+                        or \
+                        (encrypted_file is not None and encrypted_file.isdir):
+                    ignore_prefix = pathname+'/'
 
         for pathname in encrypted_remove_list:
             self._delete_file(pathname, True)

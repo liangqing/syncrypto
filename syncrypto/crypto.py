@@ -254,13 +254,16 @@ class Crypto(object):
             if not chunk:
                 continue
             plaintext = decryptor.update(chunk)
-            if len(next_chunk) == 0:
+            if len(next_chunk) < self.BUFFER_SIZE:
+                plaintext += decryptor.update(next_chunk)
                 plaintext += decryptor.finalize()
                 entire_digest = plaintext[-16:]
                 footer = plaintext[-footer_size:-16]
                 file_entry = self._unpack_footer(pathname, footer)
-                padding_length = \
-                    bytearray(plaintext[-footer_size-1:-footer_size])[0]
+                padding_length = 0
+                if len(plaintext) > footer_size:
+                    padding_length = \
+                        bytearray(plaintext[-footer_size-1:-footer_size])[0]
                 plaintext = plaintext[:-padding_length-footer_size]
                 finished = True
             if decompress_obj is not None:
