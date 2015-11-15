@@ -151,7 +151,7 @@ class CliTestCase(unittest.TestCase):
             os.remove(path)
 
     def test_interactive_input_password(self):
-        if is_windows:
+        if is_windows or py2_6:
             return
         self.cli(["--password-file", self.password_file, self.encrypted_folder,
                   self.plain_folder])
@@ -163,7 +163,7 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(child.exitstatus, 0)
 
     def test_interactive_change_password(self):
-        if is_windows:
+        if is_windows or py2_6:
             return
         self.cli(["--password-file", self.password_file, self.encrypted_folder,
                   self.plain_folder])
@@ -191,7 +191,7 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(child.exitstatus, 3)
 
     def test_interactive_invalid_password(self):
-        if is_windows:
+        if is_windows or py2_6:
             return
         self.cli(["--password-file", self.password_file, self.encrypted_folder,
                   self.plain_folder])
