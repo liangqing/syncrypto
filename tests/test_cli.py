@@ -36,7 +36,7 @@ except ImportError:
     from io import BytesIO
 
 
-if not is_windows:
+if not is_windows and not py2_6:
     import pexpect
 
 
