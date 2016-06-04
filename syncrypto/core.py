@@ -26,13 +26,12 @@ import shutil
 import json
 from datetime import datetime
 from time import sleep, time
-from getpass import getpass
 from lockfile.mkdirlockfile import MkdirLockFile as LockFile
 from random import randint
 from stat import S_IWUSR, S_IRUSR
 from .crypto import Crypto, DecryptError
 from .filetree import FileTree, FileRuleSet, FileEntry
-from .util import printable_text, string_digest
+from .util import printable_text, string_digest, getpass
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -696,7 +695,7 @@ def main(args=sys.argv[1:]):
             rule_set.add_rule_by_string(rule_string)
 
     if password is None:
-        password = getpass(b'Please input the password:')
+        password = getpass('Please input the password:')
 
     crypto = Crypto(password)
 
@@ -721,8 +720,8 @@ def main(args=sys.argv[1:]):
         if args.change_password:
             newpass1 = None
             while True:
-                newpass1 = getpass(b'Please input the new password:')
-                newpass2 = getpass(b'Please re input the new password:')
+                newpass1 = getpass('Please input the new password:')
+                newpass2 = getpass('Please re input the new password:')
                 if len(newpass1) < 6:
                     print("new password is too short")
                 elif newpass1 != newpass2:

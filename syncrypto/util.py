@@ -20,6 +20,7 @@ import sys
 import os
 import hashlib
 import binascii
+from getpass import getpass as builtin_getpass
 
 py3 = sys.version_info[0] == 3
 py2 = sys.version_info[0] == 2
@@ -96,3 +97,9 @@ def hexlify(data):
 
 def file_hexlify_digest(path):
     return hexlify(file_digest(path))
+
+
+def getpass(text="password:"):
+    if is_windows and py2:
+        text = text.encode("utf8")
+    return builtin_getpass(text)
