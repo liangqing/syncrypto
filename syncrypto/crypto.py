@@ -207,36 +207,8 @@ class Crypto(object):
         return file_entry
 
     def decrypt_fd(self, in_fd, out_fd):
-        bs = self.block_size
-        line = in_fd.read(bs)
-        if len(line) < bs:
-            raise DecryptError(
-                "header line size is not correct, expect %d, got %d" %
-                (bs, len(line)))
-        ints = bytearray(line[:2])
-        version = ints[0]
-        if version > self.VERSION:
-            raise VersionNotCompatible("Unrecognized version: (%d)" % version)
-        flags = ints[1]
-        (pathname_size,) = unpack(b'!H', line[2:4])
-        salt = line[4:]
-        key, iv = self.gen_key_and_iv(salt)
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
-                        backend=default_backend())
-        decryptor = cipher.decryptor()
-        pathname_block_size = pathname_size
-        if pathname_size % bs != 0:
-            pathname_block_size = int((pathname_size/bs+1) * bs)
-        pathname_data = in_fd.read(pathname_block_size)
-        if len(pathname_data) < pathname_block_size:
-            raise DecryptError(
-                "pathname length is not correct, expect %d, got %d" %
-                (pathname_block_size, len(pathname_data)))
-        pathname_data = decryptor.update(pathname_data)[:pathname_size]
-        try:
-            pathname = pathname_data.decode("utf-8")
-        except UnicodeDecodeError:
-            raise DecryptError()
+        (version, flags, salt, pathname, decryptor) = \
+            self.extract_header(in_fd)
         md5 = hashlib.md5()
         next_chunk = ''
         finished = False
@@ -295,3 +267,41 @@ class Crypto(object):
             raise DecryptError()
 
         return file_entry
+
+    def extract_header(self, in_fd):
+        bs = self.block_size
+        line = in_fd.read(bs)
+        if len(line) < bs:
+            raise DecryptError(
+                "header line size is not correct, expect %d, got %d" %
+                (bs, len(line)))
+        ints = bytearray(line[:2])
+        version = ints[0]
+        if version > self.VERSION:
+            raise VersionNotCompatible("Unrecognized version: (%d)" % version)
+        flags = ints[1]
+        (pathname_size,) = unpack(b'!H', line[2:4])
+        salt = line[4:]
+        key, iv = self.gen_key_and_iv(salt)
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
+                        backend=default_backend())
+        decryptor = cipher.decryptor()
+        pathname_block_size = pathname_size
+        if pathname_size % bs != 0:
+            pathname_block_size = int((pathname_size/bs+1) * bs)
+        pathname_data = in_fd.read(pathname_block_size)
+        if len(pathname_data) < pathname_block_size:
+            raise DecryptError(
+                "pathname length is not correct, expect %d, got %d" %
+                (pathname_block_size, len(pathname_data)))
+        pathname_data = decryptor.update(pathname_data)[:pathname_size]
+        try:
+            pathname = pathname_data.decode("utf-8")
+        except UnicodeDecodeError:
+            raise DecryptError()
+
+        return version, flags, salt, pathname, decryptor
+
+    def extract_entry(self, in_fd):
+        (version, flags, salt, pathname, decryptor) = \
+            self.extract_header(in_fd)

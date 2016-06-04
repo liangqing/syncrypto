@@ -106,7 +106,7 @@ For OS X, run\:
 
 
 Install And Update By pip
-------------------------
+-------------------------
 
 After installing all dependencies, you can install ``syncrypto`` by pip_ \:
 
