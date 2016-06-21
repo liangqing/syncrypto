@@ -18,7 +18,7 @@
 Two-way synchronization between a folder and its ciphertext
 """
 __title__ = "syncrypto"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __author__ = 'Qing Liang'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2015 Qing Liang (https://github.com/liangqing)'
