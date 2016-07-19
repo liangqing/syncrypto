@@ -12,3 +12,10 @@ install:
 script: nosetests  --rednose --with-cov
 after_success:
 - codecov
+deploy:
+  provider: pypi
+  user: liangqing
+  password:
+    secure: eabEthT57DZikaIj8HhPRHA7LX3GcwU+klZch6xATPtrX4U8KLSgmsTL6pgCXfMqTwlFUxuStPexRLr8ZDJP6clGY9sUU4CkWGVdMbnuVQYqj0reY1tM/UE/M5RloApZ+S3P5sH0zBvBiVAl1WZN0sYqf1LHYH4k/ErFIGKGaExPu0Zc5y9JEb+pD8mYmwiM19SjeQknuTREmQUmAyUe/mqbUj7eTh5uhv9zQmfJglRn85mj2wCbcRfiD0YE7BfXVjAICwdjQmdGGxQW13kkDHXfFiPgU9MNu4qsWV/CXihVfTwJ5rz/YdX/07ZIKRyIJaq1onSmblunH6/I7QvMc6RShNtnSBtpYMv51BszOJlytfBQHKpRgL+ekXiij31bS3dOOio/icYpxAuVlkMwsWE3mrk2e3pyi5KUn0D8oW7rcFgLxv2I2NYz7+gmUHi0n7KiwdFa4gwX8KX8Qe4kbeQ7ofcP1DTyZJ6NdK6oNztDeUQ3+rDBiRo7luwB6q5YlkPZfMrr3zN+BsWRpgT23EqErQloOgsb2zMP5nqKDvsJ3h1D5UW2zJ0VcjV3fgnUgnxIZsSrXBvlOcFQO9WTJNK5GSo7qo2X9DHQOjumV9OZJuynqZ9UDYuYHRyms3cciB1gVjFF/A1hZ5EPtUjd+4kGwZvQzhUgOPFAMZsWqxQ=
+  on:
+    tags: true

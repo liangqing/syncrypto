@@ -176,7 +176,7 @@ later, if a rule matches, the matching process will returned immediately.
 
 You can add rules in a file looks like\:
 
-.. code-block:: text
+.. code-block::
 
     include: name eq README.md
 
@@ -199,7 +199,7 @@ in file.
 
 The format of a rule\:
 
-.. code-block:: text
+.. code-block::
 
     [action]: [file attribute] [operand] [value]
 
